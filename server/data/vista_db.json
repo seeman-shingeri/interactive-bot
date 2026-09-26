@@ -1,0 +1,188 @@
+{
+  "users": [
+    {
+      "id": "default_user",
+      "name": "Explorer",
+      "createdAt": "2026-09-26T12:00:00.000Z"
+    }
+  ],
+  "botSettings": [
+    {
+      "userId": "default_user",
+      "name": "Nova",
+      "avatarColor": "cyan",
+      "personality": "Friendly",
+      "customInstructions": "You are curious, warm, and love pointing out cool visual details without talking too much. React naturally like two friends watching together.",
+      "tone": "casual",
+      "reactionFrequency": "Balanced",
+      "talkativeness": 3,
+      "humorLevel": 3,
+      "energyLevel": 3,
+      "expressiveness": 4,
+      "position": "right",
+      "size": "medium",
+      "opacity": 0.95,
+      "isVisible": true,
+      "isMinimized": false,
+      "isLocked": false,
+      "isMuted": false,
+      "reactionsPaused": false,
+      "voiceEnabled": true,
+      "voiceSpeed": 1,
+      "voicePitch": 1
+    }
+  ],
+  "privacySettings": [
+    {
+      "userId": "default_user",
+      "personalMemory": true,
+      "savePreferences": true,
+      "rememberVideos": true,
+      "learnVisualTaste": true,
+      "storeVisualObservations": true,
+      "storeConversationHistory": true,
+      "useHistoryForRecommendations": true,
+      "dataStorageMode": "personal_memory",
+      "visualAnalysisEnabled": true,
+      "microphoneEnabled": false
+    }
+  ],
+  "memoryItems": [
+    {
+      "id": "mem_seed_1",
+      "userId": "default_user",
+      "key": "pref_deep_space",
+      "category": "genre",
+      "value": "Sci-Fi Space Exploration",
+      "confidence": 0.92,
+      "sourceCount": 3,
+      "reason": "Watched Cosmic Horizons with multiple positive reactions and completion.",
+      "createdAt": "2026-09-25T14:30:00.000Z",
+      "updatedAt": "2026-09-26T10:00:00.000Z"
+    },
+    {
+      "id": "mem_seed_2",
+      "userId": "default_user",
+      "key": "pref_neon_cyber",
+      "category": "visual_style",
+      "value": "Neon Cyberpunk & Dynamic Lighting",
+      "confidence": 0.85,
+      "sourceCount": 2,
+      "reason": "Reacted with love to neon aesthetic shots in Cyber City 2099.",
+      "createdAt": "2026-09-25T16:00:00.000Z",
+      "updatedAt": "2026-09-26T11:20:00.000Z"
+    }
+  ],
+  "tasteSignals": [
+    {
+      "id": "sig_seed_1",
+      "userId": "default_user",
+      "videoId": "cosmic-horizons",
+      "videoTitle": "Cosmic Horizons: Deep Space Nebula",
+      "signalType": "love",
+      "category": "Sci-Fi & Astronomy",
+      "genres": [
+        "Sci-Fi",
+        "Astronomy"
+      ],
+      "themes": [
+        "Space Exploration"
+      ],
+      "visualStyle": "Deep Space",
+      "sourceReason": "User reacted with Love during nebula sequence",
+      "timestamp": "2026-09-25T14:35:00.000Z"
+    },
+    {
+      "id": "sig_seed_2",
+      "userId": "default_user",
+      "videoId": "cyber-city-2099",
+      "videoTitle": "Cyber City 2099: Neon Syndicate",
+      "signalType": "like",
+      "category": "Cyberpunk & Action",
+      "genres": [
+        "Action",
+        "Cyberpunk"
+      ],
+      "themes": [
+        "High-Tech Megacity"
+      ],
+      "visualStyle": "Neon Cyber",
+      "sourceReason": "User praised rainy alleyway neon lighting",
+      "timestamp": "2026-09-25T16:10:00.000Z"
+    }
+  ],
+  "tasteProfiles": [
+    {
+      "userId": "default_user",
+      "genres": {
+        "Sci-Fi": 0.88,
+        "Cyberpunk": 0.82,
+        "Animation": 0.65,
+        "Documentary": 0.58,
+        "Comedy": 0.70
+      },
+      "themes": {
+        "Space Exploration": 0.90,
+        "High-Tech Megacity": 0.84,
+        "Artificial Intelligence": 0.76,
+        "Micro-Ecosystems": 0.62
+      },
+      "visualPreferences": {
+        "Neon Cyber": 0.88,
+        "Dark Cinematic": 0.82,
+        "Deep Space": 0.85,
+        "Turquoise Waters": 0.60
+      },
+      "pacingPreference": "balanced",
+      "skippedCategories": [
+        "Horror"
+      ],
+      "frequentlyWatched": [
+        "Cosmic Horizons: Deep Space Nebula",
+        "Cyber City 2099: Neon Syndicate"
+      ],
+      "positiveReactionsCount": 5,
+      "totalVideosWatched": 4,
+      "totalWatchTimeSeconds": 590,
+      "lastUpdated": "2026-09-26T12:00:00.000Z"
+    }
+  ],
+  "viewingSessions": [
+    {
+      "id": "vs_seed_1",
+      "userId": "default_user",
+      "videoId": "cosmic-horizons",
+      "videoTitle": "Cosmic Horizons: Deep Space Nebula",
+      "startedAt": "2026-09-25T14:20:00.000Z",
+      "watchDurationSeconds": 180,
+      "completedPercentage": 100,
+      "userReactionSummary": [
+        "love"
+      ]
+    },
+    {
+      "id": "vs_seed_2",
+      "userId": "default_user",
+      "videoId": "cyber-city-2099",
+      "videoTitle": "Cyber City 2099: Neon Syndicate",
+      "startedAt": "2026-09-25T16:00:00.000Z",
+      "watchDurationSeconds": 210,
+      "completedPercentage": 100,
+      "userReactionSummary": [
+        "like"
+      ]
+    }
+  ],
+  "visualObservations": [],
+  "conversationMessages": [
+    {
+      "id": "msg_seed_1",
+      "userId": "default_user",
+      "sessionId": "default_session",
+      "sender": "bot",
+      "text": "Hey there! I'm Nova, your visual companion. I'm ready to watch with you. What should we put on first?",
+      "timestamp": "2026-09-26T12:00:00.000Z",
+      "emotion": "talking"
+    }
+  ]
+}
