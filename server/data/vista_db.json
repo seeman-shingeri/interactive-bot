@@ -10,8 +10,8 @@
     {
       "userId": "default_user",
       "name": "Nova",
-      "avatarColor": "cyan",
-      "personality": "Friendly",
+      "avatarColor": "emerald",
+      "personality": "Funny",
       "customInstructions": "You are curious, warm, and love pointing out cool visual details without talking too much. React naturally like two friends watching together.",
       "tone": "casual",
       "reactionFrequency": "Balanced",
@@ -20,7 +20,7 @@
       "energyLevel": 3,
       "expressiveness": 4,
       "position": "right",
-      "size": "medium",
+      "size": "small",
       "opacity": 0.95,
       "isVisible": true,
       "isMinimized": false,
@@ -119,10 +119,10 @@
         "Cyberpunk": 0.82,
         "Animation": 0.65,
         "Documentary": 0.58,
-        "Comedy": 0.70
+        "Comedy": 0.7
       },
       "themes": {
-        "Space Exploration": 0.90,
+        "Space Exploration": 0.9,
         "High-Tech Megacity": 0.84,
         "Artificial Intelligence": 0.76,
         "Micro-Ecosystems": 0.62
@@ -131,7 +131,7 @@
         "Neon Cyber": 0.88,
         "Dark Cinematic": 0.82,
         "Deep Space": 0.85,
-        "Turquoise Waters": 0.60
+        "Turquoise Waters": 0.6
       },
       "pacingPreference": "balanced",
       "skippedCategories": [
