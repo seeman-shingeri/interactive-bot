@@ -12,6 +12,7 @@ import {
   Brain,
   Database,
   Download,
+  Keyboard,
 } from 'lucide-react';
 import { PrivacySettings, BotSettings } from '../../types/index.js';
 
@@ -27,6 +28,7 @@ interface NavbarProps {
   isChatOpen: boolean;
   unreadCount?: number;
   onOpenDownloadModal?: () => void;
+  onOpenShortcuts?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -38,6 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleChat,
   isChatOpen,
   onOpenDownloadModal,
+  onOpenShortcuts,
 }) => {
   const tabs = [
     { id: 'watch' as NavTab, label: 'Watch Room', icon: <Tv className="w-4 h-4" /> },
@@ -153,6 +156,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </select>
         </div>
+
+        {/* Keyboard Shortcuts Cheatsheet Button */}
+        {onOpenShortcuts && (
+          <button
+            onClick={onOpenShortcuts}
+            className="p-1.5 rounded-xl border border-white/10 hover:border-cyan-400/40 text-slate-400 hover:text-cyan-300 bg-slate-900 transition-all active:scale-95"
+            title="Keyboard Shortcuts Cheatsheet"
+          >
+            <Keyboard className="w-4 h-4" />
+          </button>
+        )}
 
         {/* Download Standalone Bot Button */}
         {onOpenDownloadModal && (

@@ -28,12 +28,14 @@ import { ViewingHistoryView } from './components/history/ViewingHistoryView.js';
 import { AiConfigModal } from './components/config/AiConfigModal.js';
 import { MemoryToast, MemoryToastData } from './components/common/MemoryToast.js';
 import { DownloadBotModal } from './components/companion/DownloadBotModal.js';
+import { ShortcutsModal } from './components/common/ShortcutsModal.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 
 export const App: React.FC = () => {
   // Navigation & View
   const [currentTab, setCurrentTab] = useState<NavTab>('watch');
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState<boolean>(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
 
   // Standalone Bot Mode Detection
   const isStandaloneMode =
@@ -162,6 +164,7 @@ export const App: React.FC = () => {
     onCloseModals: () => {
       setIsChatOpen(false);
       setIsDownloadModalOpen(false);
+      setIsShortcutsOpen(false);
     },
   });
 
@@ -594,6 +597,7 @@ export const App: React.FC = () => {
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
         isChatOpen={isChatOpen}
         onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -760,6 +764,13 @@ export const App: React.FC = () => {
       <DownloadBotModal
         isOpen={isDownloadModalOpen}
         onClose={() => setIsDownloadModalOpen(false)}
+        botName={botSettings.name}
+      />
+
+      {/* Keyboard Shortcuts Cheatsheet Modal */}
+      <ShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
         botName={botSettings.name}
       />
     </div>
