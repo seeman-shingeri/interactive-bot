@@ -28,6 +28,7 @@ import { ViewingHistoryView } from './components/history/ViewingHistoryView.js';
 import { AiConfigModal } from './components/config/AiConfigModal.js';
 import { MemoryToast, MemoryToastData } from './components/common/MemoryToast.js';
 import { DownloadBotModal } from './components/companion/DownloadBotModal.js';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 
 export const App: React.FC = () => {
   // Navigation & View
@@ -148,6 +149,21 @@ export const App: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Global Companion Hotkeys (C: Chat, D: Download, M: Mute, Esc: Close)
+  useKeyboardShortcuts({
+    onToggleChat: () => setIsChatOpen((prev) => !prev),
+    onOpenDownload: () => setIsDownloadModalOpen(true),
+    onToggleMute: async () => {
+      const updated = !botSettings.isMuted;
+      const res = await api.updateBotProfile({ isMuted: updated });
+      setBotSettings(res);
+    },
+    onCloseModals: () => {
+      setIsChatOpen(false);
+      setIsDownloadModalOpen(false);
+    },
+  });
 
   // Trigger companion speech via Web Speech API
   const speakReaction = useCallback(
