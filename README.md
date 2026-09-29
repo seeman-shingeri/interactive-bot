@@ -44,6 +44,12 @@
 - **VISTA Local Semantic Engine**: Offline-capable intelligent heuristic engine that operates deterministically on video scene cues, transcripts, camera motion, and visual frame histograms with zero hallucination.
 - **Server-Side API Key Management**: API keys are never exposed in client bundles. Users can test and update keys live in the UI.
 
+### 6. Portable Standalone Bot (Zero-Dependency)
+- **Downloadable Single-File HTML**: Users can download Nova as a standalone web application (`vista-companion.html`) without the video cinema interface.
+- **Visor Face Click**: Clicking Nova's face directly opens the full companion dialogue drawer, speech recognition, and personality tuning.
+- **Hold for 2s**: Triggers the 10-node radial menu or drag anywhere across the desktop.
+- **Pop-Out Window Mode**: Launch `/?mode=standalone` for a sleek floating companion window.
+
 ---
 
 ## 🏗️ Architecture Overview
