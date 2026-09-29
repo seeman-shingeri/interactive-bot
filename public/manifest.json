@@ -1,0 +1,22 @@
+{
+  "name": "VISTA AI Companion",
+  "short_name": "VISTA",
+  "description": "Visual Interactive Smart Taste Assistant — Your Intelligent AI Video Companion",
+  "start_url": "/vista-companion.html",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#00f0ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": [
+    "entertainment",
+    "utilities",
+    "productivity"
+  ]
+}
