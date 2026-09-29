@@ -8,7 +8,12 @@
     "client": "vite",
     "server": "node --loader ts-node/esm server/index.ts || tsx server/index.ts || node server/index.js",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "tsx test_suite.ts",
+    "test:unit": "tsx tests/companion_unit_tests.ts",
+    "test:e2e": "tsx tests/e2e_companion_flow.ts",
+    "verify:companion": "tsx scripts/verify_companion.ts",
+    "backup:db": "tsx scripts/backup_db.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
