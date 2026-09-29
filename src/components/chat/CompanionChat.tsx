@@ -22,6 +22,7 @@ import {
   MemoryItem,
 } from '../../types/index.js';
 import { speechService } from '../../services/speech.js';
+import { audioFeedback } from '../../utils/audioFeedback.js';
 
 interface CompanionChatProps {
   isOpen: boolean;
@@ -73,6 +74,7 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
   const handleSend = async (textToSend?: string) => {
     const text = textToSend || inputText;
     if (!text.trim() || isThinking) return;
+    audioFeedback.playUiClick();
     setInputText('');
     await onSendMessage(text.trim());
   };

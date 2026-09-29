@@ -3,6 +3,7 @@ import { BotEmotion, BotSettings, PrivacySettings, BotReaction } from '../../typ
 import { GrabControlRadial } from './GrabControlRadial.js';
 import { SpeechBubble } from './SpeechBubble.js';
 import { Sparkles, MessageSquare, Maximize2, Minimize2, Eye, EyeOff } from 'lucide-react';
+import { audioFeedback } from '../../utils/audioFeedback.js';
 
 interface CompanionAvatarProps {
   botSettings: BotSettings;
@@ -120,6 +121,7 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
       setIsHolding(false);
       setHoldProgress(0);
       setIsControlModeOpen(true);
+      audioFeedback.playWakeChime();
       if ('vibrate' in navigator) navigator.vibrate(50);
     }, holdDuration);
   };
@@ -171,6 +173,7 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
 
     // If it was a short tap without drag or control mode, open companion chat!
     if (!wasDragging && !isControlModeOpen) {
+      audioFeedback.playUiClick();
       onOpenChat();
     }
   };
