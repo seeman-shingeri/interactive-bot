@@ -37,3 +37,4 @@ lerna-debug.log*
 *.sw?
 Thumbs.db
 create_commits.ps1
+server/data/backups/
