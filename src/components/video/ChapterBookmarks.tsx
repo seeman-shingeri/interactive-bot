@@ -33,11 +33,13 @@ export const ChapterBookmarks: React.FC<ChapterBookmarksProps> = ({
 
       {/* Chapters Grid / Scroller */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-white/10">
-        {scenes.map((scene) => {
-          const isActive = activeScene?.id === scene.id;
+        {scenes.map((scene, idx) => {
+          const isActive =
+            activeScene?.sceneName === scene.sceneName &&
+            activeScene?.startTime === scene.startTime;
           return (
             <button
-              key={scene.id}
+              key={`${scene.sceneName}-${idx}`}
               onClick={() => onSeekToScene(scene)}
               className={`flex-shrink-0 flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs transition-all active:scale-95 ${
                 isActive
@@ -48,7 +50,7 @@ export const ChapterBookmarks: React.FC<ChapterBookmarksProps> = ({
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
               <div className="flex flex-col text-left">
                 <span className="font-semibold text-[11px] truncate max-w-[130px]">
-                  {scene.title}
+                  {scene.sceneName}
                 </span>
                 <span className="text-[9px] text-slate-400 font-mono">
                   {Math.floor(scene.startTime / 60)}:
