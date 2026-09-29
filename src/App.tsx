@@ -27,10 +27,17 @@ import { BotStudio } from './components/studio/BotStudio.js';
 import { ViewingHistoryView } from './components/history/ViewingHistoryView.js';
 import { AiConfigModal } from './components/config/AiConfigModal.js';
 import { MemoryToast, MemoryToastData } from './components/common/MemoryToast.js';
+import { DownloadBotModal } from './components/companion/DownloadBotModal.js';
 
 export const App: React.FC = () => {
   // Navigation & View
   const [currentTab, setCurrentTab] = useState<NavTab>('watch');
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState<boolean>(false);
+
+  // Standalone Bot Mode Detection
+  const isStandaloneMode =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('mode') === 'standalone';
 
   // Video State
   const [currentVideo, setCurrentVideo] = useState<VideoItem>(SAMPLE_VIDEOS[0]);
@@ -432,6 +439,133 @@ export const App: React.FC = () => {
     loadData();
   };
 
+  // Standalone Bot Window Render (when mode=standalone)
+  if (isStandaloneMode) {
+    return (
+      <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans relative overflow-hidden select-none">
+        {/* Subtle Cyber Grid & Ambient Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(6,182,212,0.12),transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+
+        {/* Minimal Companion Header */}
+        <header className="px-4 py-3 bg-slate-950/80 border-b border-white/10 flex items-center justify-between backdrop-blur-xl z-30">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center font-bold text-black text-xs shadow-md shadow-cyan-500/20">
+              <span className="animate-pulse">V</span>
+            </div>
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-extrabold text-sm text-white font-mono">{botSettings.name}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30">
+                  Standalone
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-400 block -mt-0.5">
+                Click face to talk • Drag to position
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsDownloadModalOpen(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:border-cyan-400 hover:text-white transition-all shadow-sm"
+              title="Download Companion"
+            >
+              Download
+            </button>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-slate-300 text-xs font-medium hover:text-white transition-all"
+              title="Open full VISTA cinema interface"
+            >
+              Full App ↗
+            </a>
+          </div>
+        </header>
+
+        {/* Center Companion Canvas */}
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-20">
+          <div className="mb-6 px-4 py-2 rounded-2xl bg-slate-900/60 border border-white/10 backdrop-blur-md text-xs text-slate-300 max-w-sm">
+            <span className="text-cyan-400 font-bold">✨ Interactive Mode:</span> Click {botSettings.name}'s visor face to open chat, or hold for 2s for quick radial controls.
+          </div>
+
+          <CompanionAvatar
+            botSettings={botSettings}
+            privacySettings={privacySettings}
+            currentEmotion={currentEmotion}
+            activeReaction={activeReaction}
+            onUpdateBotSettings={async (partial) => {
+              const res = await api.updateBotProfile(partial);
+              setBotSettings(res);
+            }}
+            onUpdatePrivacy={async (partial) => {
+              const res = await api.updatePrivacySettings(partial);
+              setPrivacySettings(res);
+            }}
+            onOpenChat={() => setIsChatOpen(true)}
+            onUserFeedback={handleUserFeedback}
+            onResetConversation={() => {
+              api.clearChatHistory();
+              setChatMessages([]);
+            }}
+            onOpenStudio={() => {}}
+            onOpenMemoryCenter={() => {}}
+            videoPlaying={false}
+          />
+        </main>
+
+        {/* Footer Quick Controls */}
+        <footer className="px-4 py-3 bg-slate-950/85 border-t border-white/10 flex items-center justify-between backdrop-blur-xl z-30">
+          <div className="flex items-center space-x-2 text-xs text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Companion Active</span>
+          </div>
+
+          <button
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-lg shadow-cyan-600/30 transition-all active:scale-95"
+          >
+            <span>{isChatOpen ? 'Close Dialogue' : `Talk to ${botSettings.name}`}</span>
+          </button>
+        </footer>
+
+        {/* Companion Dialogue Drawer */}
+        <CompanionChat
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          botSettings={botSettings}
+          privacySettings={privacySettings}
+          currentScene={activeScene}
+          currentVideoTitle="Desktop Mode"
+          currentTimestamp={0}
+          messages={chatMessages}
+          onSendMessage={handleSendChatMessage}
+          onClearHistory={async () => {
+            await api.clearChatHistory();
+            setChatMessages([]);
+          }}
+          onAcceptMemory={async (mem) => {
+            await api.addMemoryItem(mem);
+            loadData();
+          }}
+          isThinking={isThinking}
+          isSpeaking={isSpeaking}
+          videoPlaying={false}
+        />
+
+        {/* Download Companion Modal */}
+        <DownloadBotModal
+          isOpen={isDownloadModalOpen}
+          onClose={() => setIsDownloadModalOpen(false)}
+          botName={botSettings.name}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30">
       {/* Top Navigation Bar */}
@@ -443,6 +577,7 @@ export const App: React.FC = () => {
         aiStatus={aiStatus}
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
         isChatOpen={isChatOpen}
+        onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -603,6 +738,13 @@ export const App: React.FC = () => {
       <MemoryToast
         toast={activeMemoryToast}
         onDismiss={() => setActiveMemoryToast(null)}
+      />
+
+      {/* Standalone Companion Bot Download Hub */}
+      <DownloadBotModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        botName={botSettings.name}
       />
     </div>
   );

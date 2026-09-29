@@ -11,6 +11,7 @@ import {
   EyeOff,
   Brain,
   Database,
+  Download,
 } from 'lucide-react';
 import { PrivacySettings, BotSettings } from '../../types/index.js';
 
@@ -25,6 +26,7 @@ interface NavbarProps {
   onToggleChat: () => void;
   isChatOpen: boolean;
   unreadCount?: number;
+  onOpenDownloadModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   aiStatus,
   onToggleChat,
   isChatOpen,
+  onOpenDownloadModal,
 }) => {
   const tabs = [
     { id: 'watch' as NavTab, label: 'Watch Room', icon: <Tv className="w-4 h-4" /> },
@@ -150,6 +153,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </select>
         </div>
+
+        {/* Download Standalone Bot Button */}
+        {onOpenDownloadModal && (
+          <button
+            onClick={onOpenDownloadModal}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 border-cyan-500/30 hover:border-cyan-400 hover:text-white transition-all active:scale-95 shadow-sm"
+            title="Download Standalone Companion Bot"
+          >
+            <Download className="w-4 h-4 text-cyan-400" />
+            <span className="hidden sm:inline">Download Bot</span>
+          </button>
+        )}
 
         {/* Open Chat Drawer Button */}
         <button

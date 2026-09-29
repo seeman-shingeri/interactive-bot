@@ -12,6 +12,7 @@ import {
   Smile,
   Shield,
   Layers,
+  Download,
 } from 'lucide-react';
 import { BotSettings, BotPersonalityPreset } from '../../types/index.js';
 import { speechService } from '../../services/speech.js';
@@ -88,13 +89,26 @@ export const BotStudio: React.FC<BotStudioProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={handleSave}
-          className="flex items-center space-x-2 px-6 py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm shadow-xl shadow-cyan-600/30 transition-all active:scale-95"
-        >
-          {isSaved ? <Check className="w-4 h-4 text-emerald-300" /> : <Sparkles className="w-4 h-4" />}
-          <span>{isSaved ? 'Companion Saved!' : 'Save Companion'}</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <a
+            href="/api/download/bot"
+            download="vista-companion.html"
+            className="flex items-center space-x-2 px-5 py-3 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 hover:border-cyan-400/50 text-slate-200 hover:text-white font-semibold text-sm shadow-lg transition-all active:scale-95"
+            title="Download standalone companion application"
+          >
+            <Download className="w-4 h-4 text-cyan-400" />
+            <span className="hidden sm:inline">Download Standalone Bot</span>
+            <span className="sm:hidden">Download</span>
+          </a>
+
+          <button
+            onClick={handleSave}
+            className="flex items-center space-x-2 px-6 py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm shadow-xl shadow-cyan-600/30 transition-all active:scale-95"
+          >
+            {isSaved ? <Check className="w-4 h-4 text-emerald-300" /> : <Sparkles className="w-4 h-4" />}
+            <span>{isSaved ? 'Companion Saved!' : 'Save Companion'}</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
