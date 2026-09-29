@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VISTA — Standalone AI Companion</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23090b10' stroke='%2300d2ff' stroke-width='6'/><circle cx='38' cy='45' r='6' fill='%2300d2ff'/><circle cx='62' cy='45' r='6' fill='%2300d2ff'/><path d='M35 65 Q50 78 65 65' stroke='%2300d2ff' stroke-width='5' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            vista: {
+              bg: '#07090e',
+              card: '#0f1420',
+              accent: '#00d2ff',
+            }
+          },
+          animation: {
+            'float': 'float 3.5s ease-in-out infinite',
+            'pulse-glow': 'pulseGlow 2.5s ease-in-out infinite',
+            'spin-slow': 'spin 12s linear infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+              '50%': { opacity: '0.8', transform: 'scale(1.08)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 5px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-[#07090e] text-slate-100 min-h-screen overflow-hidden relative">
+
+  <!-- Minimal Transparent Desktop Viewport Header -->
+  <div class="fixed top-3 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
+    <div class="flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900/80 border border-white/10 backdrop-blur-md shadow-lg pointer-events-auto">
+      <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+      <span class="text-xs font-bold font-mono text-cyan-300">VISTA Standalone Bot</span>
+      <span id="backend-status" class="text-[10px] text-slate-400">Checking API...</span>
+    </div>
+    <div class="flex items-center space-x-2 pointer-events-auto">
+      <button onclick="toggleChat()" class="px-3 py-1 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md shadow-cyan-600/30 transition-all flex items-center space-x-1.5 active:scale-95">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+        <span>Open UI Interface</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Draggable Companion Avatar Container -->
+  <div id="bot-container" style="position: fixed; right: 40px; bottom: 80px;" class="z-40 flex flex-col items-center select-none touch-none">
+
+    <!-- Active Speech Bubble -->
+    <div id="speech-bubble" class="hidden relative max-w-xs mb-3 z-30 animate-in fade-in slide-in-from-bottom-2">
+      <div class="p-3.5 rounded-2xl bg-slate-900/95 border border-cyan-500/40 backdrop-blur-md shadow-2xl text-slate-100">
+        <div class="flex items-center justify-between pb-1 mb-1 border-b border-white/10">
+          <span class="text-[11px] font-bold text-cyan-300 uppercase tracking-wider">Nova</span>
+          <button onclick="dismissSpeechBubble()" class="text-slate-400 hover:text-white text-xs">✕</button>
+        </div>
+        <p id="speech-text" class="text-xs text-slate-200 leading-snug">"Hey there! Click my face anytime to open our chat interface!"</p>
+        <div class="absolute -bottom-2 right-8 w-4 h-4 bg-slate-900/95 border-r border-b border-cyan-500/40 transform rotate-45"></div>
+      </div>
+    </div>
+
+    <!-- Main Bot Avatar Character -->
+    <div id="bot-avatar" class="relative cursor-pointer w-32 h-32 animate-float" title="Click face to open Bot UI • Hold 2 seconds to grab & control">
+
+      <!-- Hold progress SVG Ring -->
+      <svg id="hold-ring" class="hidden absolute -inset-4 w-[calc(100%+32px)] h-[calc(100%+32px)] z-30 pointer-events-none rotate-[-90deg]">
+        <circle cx="50%" cy="50%" r="46%" class="stroke-cyan-500/20" stroke-width="5" fill="none"></circle>
+        <circle id="hold-progress-circle" cx="50%" cy="50%" r="46%" class="stroke-cyan-400" stroke-width="5" fill="none" stroke-dasharray="289" stroke-dashoffset="289" stroke-linecap="round"></circle>
+      </svg>
+
+      <!-- Ambient Glow -->
+      <div class="absolute -inset-2 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 opacity-30 blur-xl animate-pulse-glow"></div>
+
+      <!-- Outer Chassis -->
+      <div id="chassis" class="relative w-full h-full rounded-3xl bg-slate-950/90 border-2 border-cyan-400/50 shadow-2xl shadow-cyan-500/30 backdrop-blur-xl flex flex-col items-center justify-center p-2.5 overflow-hidden transition-all duration-300">
+
+        <!-- Top Antenna / Ears -->
+        <div class="absolute top-1.5 flex items-center justify-between w-16 px-1">
+          <div class="w-2.5 h-1 rounded-full bg-cyan-400"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-cyan-400 animate-pulse"></div>
+          <div class="w-2.5 h-1 rounded-full bg-cyan-400"></div>
+        </div>
+
+        <!-- Visor Face Screen (Clickable Face) -->
+        <div id="bot-face" class="relative w-full h-20 rounded-2xl bg-[#030712] border border-white/10 flex items-center justify-center overflow-hidden shadow-inner cursor-pointer hover:border-cyan-400/80 transition-colors">
+          <div class="absolute inset-0 bg-[radial-gradient(#00ffff08_1px,transparent_1px)] [background-size:6px_6px] pointer-events-none"></div>
+
+          <!-- Expressive Eyes -->
+          <div id="eyes-wrapper" class="flex items-center space-x-3.5 transition-transform duration-100">
+            <!-- Left Eye -->
+            <div class="relative w-4 h-6 rounded-full bg-slate-900 border border-cyan-400/60 shadow-sm shadow-cyan-400/50 flex items-center justify-center overflow-hidden">
+              <div class="w-2.5 h-3.5 rounded-full bg-[#00f0ff] shadow-inner animate-pulse"></div>
+              <div class="absolute top-1 right-1 w-1 h-1 rounded-full bg-white"></div>
+            </div>
+            <!-- Right Eye -->
+            <div class="relative w-4 h-6 rounded-full bg-slate-900 border border-cyan-400/60 shadow-sm shadow-cyan-400/50 flex items-center justify-center overflow-hidden">
+              <div class="w-2.5 h-3.5 rounded-full bg-[#00f0ff] shadow-inner animate-pulse"></div>
+              <div class="absolute top-1 right-1 w-1 h-1 rounded-full bg-white"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Nameplate -->
+        <div class="mt-2 flex items-center justify-between w-full px-1">
+          <span class="text-[9px] font-mono tracking-wider uppercase text-cyan-300 font-bold">Nova</span>
+          <span id="emotion-badge" class="text-[9px] text-slate-400 font-medium">Watching</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Radial Quick Control Menu (Triggered on 2s hold) -->
+  <div id="radial-menu" class="hidden fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+    <div onclick="closeRadialMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] pointer-events-auto"></div>
+    <div class="relative pointer-events-auto flex items-center justify-center">
+      <div class="w-72 h-72 rounded-full border border-cyan-500/20 bg-cyan-950/20 backdrop-blur-md animate-pulse-glow"></div>
+      <button onclick="closeRadialMenu()" class="absolute z-20 w-12 h-12 rounded-full bg-slate-900/90 border border-cyan-400/40 text-cyan-300 flex items-center justify-center shadow-lg hover:bg-cyan-500 hover:text-black transition-all">✕</button>
+
+      <!-- Radial Orbit Buttons -->
+      <button onclick="toggleMute(); closeRadialMenu();" style="transform: translate(0px, -135px);" class="absolute w-12 h-12 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-cyan-400 text-cyan-400 flex items-center justify-center shadow-xl hover:scale-115 transition-all" title="Mute/Unmute">🔊</button>
+      <button onclick="toggleChat(); closeRadialMenu();" style="transform: translate(117px, -67px);" class="absolute w-12 h-12 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-cyan-400 text-cyan-400 flex items-center justify-center shadow-xl hover:scale-115 transition-all" title="Open Chat">💬</button>
+      <button onclick="changePersonality(); closeRadialMenu();" style="transform: translate(117px, 67px);" class="absolute w-12 h-12 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-pink-400 text-pink-400 flex items-center justify-center shadow-xl hover:scale-115 transition-all" title="Personality">✨</button>
+      <button onclick="openTab('privacy'); toggleChat(); closeRadialMenu();" style="transform: translate(0px, 135px);" class="absolute w-12 h-12 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-purple-400 text-purple-400 flex items-center justify-center shadow-xl hover:scale-115 transition-all" title="Memory Settings">🧠</button>
+      <button onclick="openTab('studio'); toggleChat(); closeRadialMenu();" style="transform: translate(-117px, 67px);" class="absolute w-12 h-12 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-cyan-400 text-cyan-400 flex items-center justify-center shadow-xl hover:scale-115 transition-all" title="Bot Studio">⚙️</button>
+      <button onclick="resetPosition(); closeRadialMenu();" style="transform: translate(-117px, -67px);" class="absolute w-12 h-12 rounded-2xl bg-slate-900/90 border border-white/10 hover:border-amber-400 text-amber-400 flex items-center justify-center shadow-xl hover:scale-115 transition-all" title="Reset Position">🔄</button>
+    </div>
+  </div>
+
+  <!-- SLIDE-OUT BOT UI INTERFACE DRAWER (Opens when bot face is clicked) -->
+  <div id="chat-drawer" class="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] bg-slate-950/95 border-l border-white/10 backdrop-blur-2xl shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-out">
+
+    <!-- Drawer Header -->
+    <div class="p-4 border-b border-white/10 flex items-center justify-between bg-slate-900/50">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-black font-bold shadow-md shadow-cyan-500/30">🤖</div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h3 class="text-sm font-bold text-white tracking-wide">Nova</h3>
+            <span id="ui-personality-tag" class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold">Friendly</span>
+          </div>
+          <div class="flex items-center space-x-1.5 mt-0.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="ui-status-text" class="text-[10px] font-medium text-emerald-300">Watching with you</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Close Button -->
+      <button onclick="toggleChat()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- UI Tabs (Chat, Personality Studio, Privacy) -->
+    <div class="px-4 py-2 border-b border-white/10 flex space-x-2 bg-slate-900/30 text-xs font-semibold">
+      <button id="tab-btn-chat" onclick="openTab('chat')" class="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Dialogue</button>
+      <button id="tab-btn-studio" onclick="openTab('studio')" class="px-3 py-1.5 rounded-xl text-slate-400 hover:text-white">Studio & Tuning</button>
+      <button id="tab-btn-privacy" onclick="openTab('privacy')" class="px-3 py-1.5 rounded-xl text-slate-400 hover:text-white">Privacy & Memory</button>
+    </div>
+
+    <!-- TAB 1: Chat View -->
+    <div id="view-chat" class="flex-1 flex flex-col overflow-hidden">
+      <!-- Messages List -->
+      <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
+        <div class="flex flex-col items-start">
+          <div class="max-w-[85%] rounded-2xl rounded-bl-none p-3 text-xs leading-relaxed bg-slate-900/90 border border-white/10 text-slate-200">
+            Hey there! I'm Nova, your companion. I'm ready to watch and chat about anything on screen. What are we watching?
+          </div>
+          <span class="text-[9px] text-slate-500 mt-1 px-1 font-mono">Just now</span>
+        </div>
+      </div>
+
+      <!-- Quick Suggested Prompts -->
+      <div class="px-4 py-2 border-t border-white/10 bg-slate-950/60 flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
+        <button onclick="sendQuickPrompt('What just happened?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-slate-900 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-white/10 text-[11px] transition-all">What just happened?</button>
+        <button onclick="sendQuickPrompt('What do you think about this scene?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-slate-900 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-white/10 text-[11px] transition-all">What do you think of this scene?</button>
+        <button onclick="sendQuickPrompt('Would I probably like this?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-slate-900 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-white/10 text-[11px] transition-all">Would I like this?</button>
+      </div>
+
+      <!-- Input Form -->
+      <div class="p-3 border-t border-white/10 bg-slate-900/80 flex items-center space-x-2">
+        <button onclick="toggleVoiceInput()" id="mic-btn" class="p-2.5 rounded-xl border border-white/10 bg-slate-950 text-slate-400 hover:text-cyan-300 transition-all" title="Push-to-talk microphone">🎙️</button>
+        <input id="chat-input" type="text" placeholder="Chat with Nova..." onkeydown="if(event.key==='Enter') sendMessage()" class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-400">
+        <button onclick="sendMessage()" class="p-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white transition-all shadow-md shadow-cyan-600/30">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 2: Studio View -->
+    <div id="view-studio" class="hidden flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Personality Presets</h4>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button onclick="setPersonality('Friendly')" class="p-2 rounded-xl bg-cyan-950/40 border border-cyan-400 text-cyan-300 font-semibold">Friendly</button>
+          <button onclick="setPersonality('Funny')" class="p-2 rounded-xl bg-slate-950 border border-white/10 text-slate-300 hover:border-cyan-400">Funny</button>
+          <button onclick="setPersonality('Curious')" class="p-2 rounded-xl bg-slate-950 border border-white/10 text-slate-300 hover:border-cyan-400">Curious</button>
+          <button onclick="setPersonality('Analytical')" class="p-2 rounded-xl bg-slate-950 border border-white/10 text-slate-300 hover:border-cyan-400">Analytical</button>
+          <button onclick="setPersonality('Sarcastic')" class="p-2 rounded-xl bg-slate-950 border border-white/10 text-slate-300 hover:border-cyan-400">Sarcastic</button>
+          <button onclick="setPersonality('Calm')" class="p-2 rounded-xl bg-slate-950 border border-white/10 text-slate-300 hover:border-cyan-400">Calm</button>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-3">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Dynamics Sliders</h4>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between text-slate-400"><span>Talkativeness</span><span id="slider-talk-val">3/5</span></div>
+          <input type="range" min="1" max="5" value="3" oninput="document.getElementById('slider-talk-val').innerText = this.value + '/5'" class="w-full h-1.5 bg-slate-950 rounded cursor-pointer accent-cyan-400">
+
+          <div class="flex justify-between text-slate-400 pt-2"><span>Humor Level</span><span id="slider-humor-val">4/5</span></div>
+          <input type="range" min="1" max="5" value="4" oninput="document.getElementById('slider-humor-val').innerText = this.value + '/5'" class="w-full h-1.5 bg-slate-950 rounded cursor-pointer accent-cyan-400">
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-2">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Voice Responses</h4>
+        <div class="flex items-center justify-between text-xs">
+          <span>Enable Web Speech TTS</span>
+          <input id="tts-toggle" type="checkbox" checked class="w-4 h-4 accent-cyan-500 rounded">
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Privacy View -->
+    <div id="view-privacy" class="hidden flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-purple-500/30 space-y-3">
+        <h4 class="text-xs font-bold text-purple-300 uppercase tracking-wider">Master Memory Switch</h4>
+        <div class="flex items-center justify-between text-xs">
+          <span>Personal Memory Active</span>
+          <input type="checkbox" checked class="w-5 h-5 accent-purple-500 rounded">
+        </div>
+        <p class="text-[11px] text-slate-400 leading-snug">When enabled, VISTA remembers your preferred visual styles. When disabled, nothing is persisted.</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-2">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Data Storage Mode</h4>
+        <div class="space-y-1.5 text-xs">
+          <label class="flex items-center space-x-2 text-slate-300"><input type="radio" name="storage" checked class="accent-cyan-500"><span>Personal Memory (Saved)</span></label>
+          <label class="flex items-center space-x-2 text-slate-300"><input type="radio" name="storage" class="accent-cyan-500"><span>Session Only (RAM)</span></label>
+          <label class="flex items-center space-x-2 text-slate-300"><input type="radio" name="storage" class="accent-cyan-500"><span>No Storage (Zero)</span></label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State
+    let isHolding = false;
+    let holdTimer = null;
+    let holdInterval = null;
+    let isDragging = false;
+    let dragStart = null;
+    let currentCoords = null;
+    let isChatOpen = false;
+    let isMuted = false;
+    let currentPersonality = 'Friendly';
+    const container = document.getElementById('bot-container');
+    const avatar = document.getElementById('bot-avatar');
+    const face = document.getElementById('bot-face');
+    const holdRing = document.getElementById('hold-ring');
+    const progressCircle = document.getElementById('hold-progress-circle');
+    const radialMenu = document.getElementById('radial-menu');
+    const drawer = document.getElementById('chat-drawer');
+    const eyes = document.getElementById('eyes-wrapper');
+
+    // Natural eye blinking
+    setInterval(() => {
+      eyes.style.transform = 'scaleY(0.1)';
+      setTimeout(() => { eyes.style.transform = 'scaleY(1)'; }, 150);
+    }, 4000);
+
+    // Natural eye tracking cursor
+    window.addEventListener('mousemove', (e) => {
+      const rect = avatar.getBoundingClientRect();
+      const dx = (e.clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2);
+      const dy = (e.clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2);
+      eyes.style.transform = `translate(${Math.max(-4, Math.min(4, dx * 6))}px, ${Math.max(-3, Math.min(3, dy * 4))}px)`;
+    });
+
+    // Check backend health
+    fetch('http://localhost:3001/api/status')
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('backend-status').innerText = 'Connected to VISTA API';
+        document.getElementById('backend-status').className = 'text-[10px] text-emerald-400';
+      })
+      .catch(() => {
+        document.getElementById('backend-status').innerText = 'Offline Mode Active';
+        document.getElementById('backend-status').className = 'text-[10px] text-amber-400';
+      });
+
+    // POINTER DOWN: Start 2000ms Hold for Control Mode
+    avatar.addEventListener('pointerdown', (e) => {
+      const rect = container.getBoundingClientRect();
+      dragStart = { startX: e.clientX, startY: e.clientY, initX: rect.left, initY: rect.top };
+      isHolding = true;
+      holdRing.classList.remove('hidden');
+
+      const startTime = Date.now();
+      const holdDuration = 2000;
+
+      holdInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(100, (elapsed / holdDuration) * 100);
+        progressCircle.style.strokeDashoffset = 289 - (289 * progress / 100);
+      }, 25);
+
+      holdTimer = setTimeout(() => {
+        clearInterval(holdInterval);
+        holdRing.classList.add('hidden');
+        isHolding = false;
+        radialMenu.classList.remove('hidden');
+        if ('vibrate' in navigator) navigator.vibrate(50);
+      }, holdDuration);
+    });
+
+    // POINTER MOVE: Smooth Viewport Dragging
+    window.addEventListener('pointermove', (e) => {
+      if (!dragStart) return;
+      const dx = e.clientX - dragStart.startX;
+      const dy = e.clientY - dragStart.startY;
+
+      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+        if (holdTimer) clearTimeout(holdTimer);
+        if (holdInterval) clearInterval(holdInterval);
+        holdRing.classList.add('hidden');
+        isHolding = false;
+        isDragging = true;
+
+        const newX = Math.max(10, Math.min(window.innerWidth - 140, dragStart.initX + dx));
+        const newY = Math.max(10, Math.min(window.innerHeight - 150, dragStart.initY + dy));
+        container.style.left = newX + 'px';
+        container.style.top = newY + 'px';
+        container.style.right = 'auto';
+        container.style.bottom = 'auto';
+      }
+    });
+
+    // POINTER UP: Click on face opens Bot UI Interface!
+    window.addEventListener('pointerup', () => {
+      if (holdTimer) clearTimeout(holdTimer);
+      if (holdInterval) clearInterval(holdInterval);
+      holdRing.classList.add('hidden');
+
+      const wasDragging = isDragging;
+      isHolding = false;
+      isDragging = false;
+      dragStart = null;
+
+      // Normal short click on bot face -> opens Bot UI Interface!
+      if (!wasDragging && radialMenu.classList.contains('hidden')) {
+        toggleChat();
+      }
+    });
+
+    // UI DRAWER TOGGLE (Opens / Closes Bot UI Interface)
+    function toggleChat() {
+      isChatOpen = !isChatOpen;
+      if (isChatOpen) {
+        drawer.classList.remove('translate-x-full');
+        document.getElementById('speech-bubble').classList.add('hidden');
+      } else {
+        drawer.classList.add('translate-x-full');
+      }
+    }
+
+    function closeRadialMenu() {
+      radialMenu.classList.add('hidden');
+    }
+
+    function resetPosition() {
+      container.style.right = '40px';
+      container.style.bottom = '80px';
+      container.style.left = 'auto';
+      container.style.top = 'auto';
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      showSpeechBubble(isMuted ? 'Muted voice output.' : 'Voice enabled!');
+    }
+
+    function changePersonality() {
+      const presets = ['Friendly', 'Funny', 'Curious', 'Analytical', 'Sarcastic'];
+      const next = presets[(presets.indexOf(currentPersonality) + 1) % presets.length];
+      setPersonality(next);
+    }
+
+    function setPersonality(p) {
+      currentPersonality = p;
+      document.getElementById('ui-personality-tag').innerText = p;
+      showSpeechBubble(`Personality shifted to ${p}!`);
+    }
+
+    function openTab(tab) {
+      ['chat', 'studio', 'privacy'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('hidden');
+        document.getElementById('tab-btn-' + t).className = 'px-3 py-1.5 rounded-xl text-slate-400 hover:text-white';
+      });
+      document.getElementById('view-' + tab).classList.remove('hidden');
+      document.getElementById('tab-btn-' + tab).className = 'px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30';
+    }
+
+    function showSpeechBubble(text) {
+      document.getElementById('speech-text').innerText = `"${text}"`;
+      document.getElementById('speech-bubble').classList.remove('hidden');
+      if (!isMuted && 'speechSynthesis' in window && document.getElementById('tts-toggle').checked) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.pitch = 1.1;
+        u.rate = 1.05;
+        window.speechSynthesis.speak(u);
+      }
+      setTimeout(() => { document.getElementById('speech-bubble').classList.add('hidden'); }, 6000);
+    }
+
+    function dismissSpeechBubble() {
+      document.getElementById('speech-bubble').classList.add('hidden');
+    }
+
+    function sendQuickPrompt(prompt) {
+      document.getElementById('chat-input').value = prompt;
+      sendMessage();
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      // Append User message
+      const box = document.getElementById('messages-container');
+      box.innerHTML += `
+        <div class="flex flex-col items-end">
+          <div class="max-w-[85%] rounded-2xl rounded-br-none p-3 text-xs leading-relaxed bg-cyan-600 text-white">
+            ${text}
+          </div>
+          <span class="text-[9px] text-slate-500 mt-1 px-1 font-mono">Just now</span>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      // Query Backend or Fallback Heuristic
+      fetch('http://localhost:3001/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: text,
+          videoContext: { videoId: 'standalone', videoTitle: 'Active Desktop Companion', timestamp: 0 }
+        })
+      })
+      .then(r => r.json())
+      .then(d => {
+        const reply = d.botReply || "I'm right here with you!";
+        appendBotMessage(reply);
+        if (!isMuted && document.getElementById('tts-toggle').checked) {
+          const u = new SpeechSynthesisUtterance(reply);
+          window.speechSynthesis.speak(u);
+        }
+      })
+      .catch(() => {
+        const fallbackReplies = [
+          `I love watching with you! What are we checking out next?`,
+          `Great observation! Notice the visual pacing and contrast?`,
+          `I'm right here alongside you. Click my personality tab to tune how I react!`
+        ];
+        const reply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+        appendBotMessage(reply);
+      });
+    }
+
+    function appendBotMessage(reply) {
+      const box = document.getElementById('messages-container');
+      box.innerHTML += `
+        <div class="flex flex-col items-start">
+          <div class="max-w-[85%] rounded-2xl rounded-bl-none p-3 text-xs leading-relaxed bg-slate-900/90 border border-white/10 text-slate-200">
+            ${reply}
+          </div>
+          <span class="text-[9px] text-slate-500 mt-1 px-1 font-mono">Just now</span>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function toggleVoiceInput() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Speech recognition is not supported in this browser.');
+        return;
+      }
+      const rec = new SpeechRecognition();
+      rec.onresult = (e) => {
+        document.getElementById('chat-input').value = e.results[0][0].transcript;
+        sendMessage();
+      };
+      rec.start();
+    }
+  </script>
+</body>
+</html>

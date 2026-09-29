@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { db } from './db.js';
 import { providerFactory } from './ai/providerFactory.js';
@@ -55,6 +56,22 @@ app.post('/api/config/api-key', (req, res) => {
     message: 'API Key updated successfully',
     status: providerFactory.getStatus(),
   });
+});
+
+// --- Download Standalone Bot Endpoint ---
+app.get('/api/download/bot', (req, res) => {
+  const filePath = path.join(__dirname, '../public/vista-companion.html');
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, 'vista-companion.html');
+  } else {
+    // Fallback if public folder is mapped in dist
+    const fallbackPath = path.join(__dirname, '../dist/vista-companion.html');
+    if (fs.existsSync(fallbackPath)) {
+      res.download(fallbackPath, 'vista-companion.html');
+    } else {
+      res.status(404).json({ error: 'Standalone companion file not found' });
+    }
+  }
 });
 
 // --- Bot Settings Routes ---
@@ -153,7 +170,6 @@ app.delete('/api/memory/all', (req, res) => {
   const userId = getUserId(req);
   const result = db.deleteAllMemory(userId);
   res.json({
-    success: true,
     message: 'All memory, preferences, and viewing records permanently deleted.',
     ...result,
   });
