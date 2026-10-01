@@ -20,6 +20,7 @@ import {
   Clock,
   Layers,
   Upload,
+  AlertCircle,
 } from 'lucide-react';
 import { VideoItem, SceneMetadata, TranscriptCue, BotReaction } from '../../types/index.js';
 import { VideoFrameSampler } from './VideoFrameSampler.js';
@@ -72,6 +73,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     currentVideo.scenes?.[0]
   );
   const [currentTranscriptCue, setCurrentTranscriptCue] = useState<TranscriptCue | null>(null);
+  const [hasMediaError, setHasMediaError] = useState(false);
+
+  // Reset error on video change
+  useEffect(() => {
+    setHasMediaError(false);
+  }, [currentVideo.videoUrl]);
 
   // Sync scene when video currentTime changes
   useEffect(() => {
@@ -97,12 +104,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setCurrentTranscriptCue(cue || null);
   }, [currentTime, currentVideo.transcript]);
 
-  // Intelligent Asynchronous Frame Sampler Loop
+  // Intelligent Asynchronous Frame Sampler Loop with Background Tab Throttling
   // Samples every 6-8 seconds, or immediately if scene cuts
   useEffect(() => {
     if (!isPlaying || !visualAnalysisEnabled) return;
 
     const interval = setInterval(() => {
+      // Throttle sampling when tab is backgrounded / minimized to save GPU/CPU cycles
+      if (typeof document !== 'undefined' && document.hidden) return;
+
       const video = videoRef.current;
       if (!video || video.paused) return;
 
@@ -217,9 +227,33 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           }}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
+          onError={() => setHasMediaError(true)}
           onClick={togglePlay}
           className="w-full h-full object-cover cursor-pointer"
         />
+
+        {/* Broken Video / Media Error Graceful Recovery Screen */}
+        {hasMediaError && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-slate-950/90 backdrop-blur-md text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-lg">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-white">Stream Unavailable or Format Error</h4>
+              <p className="text-xs text-slate-400 max-w-xs">
+                Unable to load video stream. The video link may have expired or is blocked by CORS.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (playlist.length > 0) onVideoSelect(playlist[0]);
+              }}
+              className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
+            >
+              Switch to Default Channel
+            </button>
+          </div>
+        )}
 
         {/* Live Visual Analysis HUD Badge (Top Left) */}
         <div className="absolute top-4 left-4 z-20 flex items-center space-x-2 pointer-events-none">
