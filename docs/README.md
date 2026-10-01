@@ -15,6 +15,7 @@ Welcome to the comprehensive documentation suite for **VISTA** (Visual Interacti
 | 🏛️ [**Architecture Overview**](./ARCHITECTURE.md) | Multi-layered perception loop, Ambilight video synchronization, and component hierarchy. |
 | 📡 [**REST API Reference**](./API_REFERENCE.md) | Complete documentation of all Express endpoints, payloads, and response schemas. |
 | ♿ [**Accessibility & Shortcuts**](./ACCESSIBILITY_AND_SHORTCUTS.md) | Keyboard navigation, high-contrast states, and screen reader compatibility. |
+| 🩺 [**Troubleshooting & Diagnostics**](./TROUBLESHOOTING.md) | Practical fixes for mic permissions, TTS audio autoplay, and stream errors. |
 
 ---
 
@@ -29,6 +30,9 @@ npm run test:unit
 
 # Run End-to-End PWA & Standalone Flow Verification
 npm run test:e2e
+
+# Run Stress & Memory Resilience Suite
+npm run test:stress
 
 # Validate Standalone Single-File HTML Bundle
 npm run verify:companion
