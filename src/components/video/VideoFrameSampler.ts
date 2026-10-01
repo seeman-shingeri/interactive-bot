@@ -53,6 +53,9 @@ export class VideoFrameSampler {
 
       const base64Image = this.canvas.toDataURL('image/jpeg', 0.6);
 
+      // Immediately clear canvas buffer to prevent memory leaks in multi-hour sessions
+      this.ctx.clearRect(0, 0, this.width, this.height);
+
       return {
         base64Image,
         timestamp: video.currentTime,
@@ -61,6 +64,9 @@ export class VideoFrameSampler {
         isPotentialSceneChange,
       };
     } catch (err) {
+      if (this.ctx) {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+      }
       // Cross-origin video security restriction fallback
       return {
         base64Image: '',

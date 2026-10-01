@@ -118,6 +118,7 @@ export const App: React.FC = () => {
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const recentBotCommentsRef = useRef<string[]>([]);
   const sessionStartTimeRef = useRef<number>(Date.now());
+  const activeBlobUrlRef = useRef<string | null>(null);
 
   // Load initial backend state
   const loadData = useCallback(async () => {
@@ -404,9 +405,14 @@ export const App: React.FC = () => {
     }
   };
 
-  // Custom Video Upload handler
+  // Custom Video Upload handler with automatic memory reclamation
   const handleUploadCustomVideo = (file: File) => {
+    if (activeBlobUrlRef.current) {
+      URL.revokeObjectURL(activeBlobUrlRef.current);
+    }
     const objectUrl = URL.createObjectURL(file);
+    activeBlobUrlRef.current = objectUrl;
+
     const customItem: VideoItem = {
       id: `custom_${Date.now()}`,
       title: file.name.replace(/\.[^/.]+$/, ''),
