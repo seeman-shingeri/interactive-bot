@@ -5,6 +5,7 @@ class SpeechService {
   private recognition: any = null;
   private isListening: boolean = false;
   private availableVoices: SpeechSynthesisVoice[] = [];
+  private keepAliveTimer: any = null;
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -24,6 +25,25 @@ class SpeechService {
         this.recognition.interimResults = true;
         this.recognition.lang = 'en-US';
       }
+    }
+  }
+
+  private startKeepAlive() {
+    this.stopKeepAlive();
+    this.keepAliveTimer = setInterval(() => {
+      if (!this.synth || !this.synth.speaking) {
+        this.stopKeepAlive();
+        return;
+      }
+      this.synth.pause();
+      this.synth.resume();
+    }, 10000);
+  }
+
+  private stopKeepAlive() {
+    if (this.keepAliveTimer) {
+      clearInterval(this.keepAliveTimer);
+      this.keepAliveTimer = null;
     }
   }
 
@@ -53,8 +73,8 @@ class SpeechService {
   ) {
     if (!this.synth) return;
 
-    // Cancel current speaking
-    this.synth.cancel();
+    // Cancel current speaking and clear any existing keep-alive
+    this.stopSpeaking();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.pitch = options?.pitch ?? 1.1; // Slightly friendly higher pitch
@@ -73,19 +93,29 @@ class SpeechService {
           (v.name.includes('Google') ||
             v.name.includes('Natural') ||
             v.name.includes('Samantha') ||
+            v.name.includes('Jenny') ||
             v.name.includes('Zira') ||
             v.name.includes('David'))
       );
       if (preferred) utterance.voice = preferred;
     }
 
-    if (options?.onEnd) utterance.onend = options.onEnd;
-    if (options?.onError) utterance.onerror = options.onError;
+    utterance.onend = () => {
+      this.stopKeepAlive();
+      if (options?.onEnd) options.onEnd();
+    };
 
+    utterance.onerror = () => {
+      this.stopKeepAlive();
+      if (options?.onError) options.onError();
+    };
+
+    this.startKeepAlive();
     this.synth.speak(utterance);
   }
 
   stopSpeaking() {
+    this.stopKeepAlive();
     if (this.synth) {
       this.synth.cancel();
     }
