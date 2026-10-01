@@ -12,6 +12,7 @@
     "test": "tsx test_suite.ts",
     "test:unit": "tsx tests/companion_unit_tests.ts",
     "test:e2e": "tsx tests/e2e_companion_flow.ts",
+    "test:stress": "tsx tests/stress_test.ts",
     "verify:companion": "tsx scripts/verify_companion.ts",
     "backup:db": "tsx scripts/backup_db.ts"
   },
