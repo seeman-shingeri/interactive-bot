@@ -50,6 +50,14 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
   const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
+  const velocityRef = useRef<{ vx: number; vy: number; lastX: number; lastY: number; lastTime: number }>({
+    vx: 0,
+    vy: 0,
+    lastX: 0,
+    lastY: 0,
+    lastTime: Date.now(),
+  });
+  const inertiaRafRef = useRef<number | null>(null);
 
   // Eye tracking & blinking
   const [blink, setBlink] = useState(false);
@@ -87,12 +95,18 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
     return () => {
       if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
       if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+      if (inertiaRafRef.current) cancelAnimationFrame(inertiaRafRef.current);
     };
   }, []);
 
   // Pointer Down -> Start Hold detection (approx 2 seconds for Control Mode)
   const handlePointerDown = (e: React.PointerEvent) => {
     if (botSettings.isLocked) return;
+
+    if (inertiaRafRef.current) {
+      cancelAnimationFrame(inertiaRafRef.current);
+      inertiaRafRef.current = null;
+    }
 
     const startX = e.clientX;
     const startY = e.clientY;
@@ -101,6 +115,13 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
     const initialY = coords?.y ?? currentElemRect?.top ?? window.innerHeight - 260;
 
     dragStartRef.current = { startX, startY, initialX, initialY };
+    velocityRef.current = {
+      vx: 0,
+      vy: 0,
+      lastX: startX,
+      lastY: startY,
+      lastTime: Date.now(),
+    };
 
     // Start 2000ms hold timer
     setIsHolding(true);
@@ -126,12 +147,23 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
     }, holdDuration);
   };
 
-  // Pointer Move -> Dragging check
+  // Pointer Move -> Dragging check with Velocity tracking
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!dragStartRef.current) return;
 
     const dx = e.clientX - dragStartRef.current.startX;
     const dy = e.clientY - dragStartRef.current.startY;
+
+    // Track movement velocity for inertia release
+    const now = Date.now();
+    const dt = Math.max(1, now - velocityRef.current.lastTime);
+    velocityRef.current = {
+      vx: (e.clientX - velocityRef.current.lastX) / dt,
+      vy: (e.clientY - velocityRef.current.lastY) / dt,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      lastTime: now,
+    };
 
     // If moved more than 8 pixels, treat as drag and cancel hold timer
     if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
@@ -154,7 +186,7 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
     }
   };
 
-  // Pointer Up -> End Hold or Click
+  // Pointer Up -> End Hold or Click with Spring Momentum Glide
   const handlePointerUp = () => {
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);
@@ -170,6 +202,30 @@ export const CompanionAvatar: React.FC<CompanionAvatarProps> = ({
     setHoldProgress(0);
     setIsDragging(false);
     dragStartRef.current = null;
+
+    // Spring Momentum Inertia on Drag Release
+    if (wasDragging) {
+      let vx = velocityRef.current.vx * 12;
+      let vy = velocityRef.current.vy * 12;
+      const friction = 0.88;
+
+      const stepGlide = () => {
+        if (Math.abs(vx) < 0.2 && Math.abs(vy) < 0.2) {
+          inertiaRafRef.current = null;
+          return;
+        }
+        vx *= friction;
+        vy *= friction;
+        setCoords((prev) => {
+          if (!prev) return prev;
+          const nx = Math.max(10, Math.min(window.innerWidth - 140, prev.x + vx));
+          const ny = Math.max(10, Math.min(window.innerHeight - 180, prev.y + vy));
+          return { x: nx, y: ny };
+        });
+        inertiaRafRef.current = requestAnimationFrame(stepGlide);
+      };
+      inertiaRafRef.current = requestAnimationFrame(stepGlide);
+    }
 
     // If it was a short tap without drag or control mode, open companion chat!
     if (!wasDragging && !isControlModeOpen) {
