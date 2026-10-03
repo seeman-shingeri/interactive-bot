@@ -62,8 +62,45 @@ export interface MemoryItemRecord {
   confidence: number;
   sourceCount: number;
   reason: string;
+  source?: 'user_explicit' | 'confirmed_inference' | 'video_observation';
+  isConfirmed?: boolean;
+  disabled?: boolean;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type TaskStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type TaskType = 'video_summary' | 'preference_refresh' | 'scene_index' | 'custom_agent';
+
+export interface TaskRecord {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  type: TaskType;
+  status: TaskStatus;
+  progress: number; // 0 to 100
+  result?: any;
+  error?: string | null;
+  schedule?: {
+    recurring?: boolean;
+    intervalMinutes?: number;
+    nextRun?: string;
+  } | null;
+  retries: number;
+  maxRetries: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActivityLogRecord {
+  id: string;
+  userId: string;
+  action: string;
+  category: 'task' | 'memory' | 'vision' | 'privacy' | 'chat';
+  details: string;
+  timestamp: string;
 }
 
 export interface TasteSignalRecord {
@@ -146,6 +183,8 @@ interface DatabaseSchema {
   viewingSessions: ViewingSessionRecord[];
   visualObservations: VisualObservationRecord[];
   conversationMessages: ConversationMessageRecord[];
+  tasks: TaskRecord[];
+  activityLogs: ActivityLogRecord[];
 }
 
 const defaultSchema: DatabaseSchema = {
@@ -258,6 +297,34 @@ const defaultSchema: DatabaseSchema = {
   viewingSessions: [],
   visualObservations: [],
   conversationMessages: [],
+  tasks: [
+    {
+      id: 'task_init_1',
+      userId: 'default_user',
+      title: 'Analyze Initial Viewing Preferences',
+      description: 'Synthesize preference seeds and calculate visual resonance scores.',
+      type: 'preference_refresh',
+      status: 'completed',
+      progress: 100,
+      result: { analyzedCategories: 3, resonantTraits: ['Sci-Fi', 'Neon Cyber'] },
+      error: null,
+      schedule: null,
+      retries: 0,
+      maxRetries: 3,
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      updatedAt: new Date(Date.now() - 3500000).toISOString(),
+    },
+  ],
+  activityLogs: [
+    {
+      id: 'act_init_1',
+      userId: 'default_user',
+      action: 'VISTA Companion Initialized',
+      category: 'privacy',
+      details: 'Companion loaded with sovereign local memory boundary.',
+      timestamp: new Date().toISOString(),
+    },
+  ],
 };
 
 class Database {
@@ -288,7 +355,21 @@ class Database {
       if (fs.existsSync(DB_FILE)) {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         const parsed = JSON.parse(raw);
-        return { ...defaultSchema, ...parsed };
+        const data: DatabaseSchema = {
+          ...defaultSchema,
+          ...parsed,
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [...defaultSchema.tasks],
+          activityLogs: Array.isArray(parsed.activityLogs) ? parsed.activityLogs : [...defaultSchema.activityLogs],
+        };
+        // Normalize memory items with new fields if missing
+        data.memoryItems = (data.memoryItems || []).map((m: any) => ({
+          ...m,
+          source: m.source || 'user_explicit',
+          isConfirmed: m.isConfirmed ?? true,
+          disabled: m.disabled ?? false,
+          tags: Array.isArray(m.tags) ? m.tags : [],
+        }));
+        return data;
       }
     } catch (err) {
       console.error('Failed to load database file, initializing defaults:', err);
@@ -533,21 +614,106 @@ class Database {
     this.data.memoryItems = this.data.memoryItems.filter((m) => !(m.userId === userId && m.id === id));
     if (this.data.memoryItems.length !== initialLen) {
       this.save();
+      this.logActivity(userId, 'Deleted memory item', 'memory', `Memory ID: ${id}`);
       return true;
     }
     return false;
+  }
+
+  updateMemoryItem(
+    userId: string,
+    id: string,
+    updates: Partial<Pick<MemoryItemRecord, 'value' | 'category' | 'reason' | 'isConfirmed' | 'disabled' | 'tags'>>
+  ): MemoryItemRecord | null {
+    const idx = this.data.memoryItems.findIndex((m) => m.userId === userId && m.id === id);
+    if (idx === -1) return null;
+
+    const existing = this.data.memoryItems[idx];
+    this.data.memoryItems[idx] = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    this.save();
+    this.logActivity(
+      userId,
+      `Updated memory item: "${this.data.memoryItems[idx].key}"`,
+      'memory',
+      `Value: ${this.data.memoryItems[idx].value}`
+    );
+    return this.data.memoryItems[idx];
+  }
+
+  toggleMemoryItem(userId: string, id: string): MemoryItemRecord | null {
+    const idx = this.data.memoryItems.findIndex((m) => m.userId === userId && m.id === id);
+    if (idx === -1) return null;
+
+    const existing = this.data.memoryItems[idx];
+    const newDisabled = !existing.disabled;
+    this.data.memoryItems[idx] = {
+      ...existing,
+      disabled: newDisabled,
+      updatedAt: new Date().toISOString(),
+    };
+    this.save();
+    this.logActivity(
+      userId,
+      `${newDisabled ? 'Disabled' : 'Enabled'} memory: "${existing.key}"`,
+      'memory',
+      `Status: ${newDisabled ? 'Disabled' : 'Active'}`
+    );
+    return this.data.memoryItems[idx];
+  }
+
+  confirmMemoryItem(userId: string, id: string): MemoryItemRecord | null {
+    return this.updateMemoryItem(userId, id, { isConfirmed: true });
+  }
+
+  getRelevantMemories(userId: string, query?: string, limit: number = 4): MemoryItemRecord[] {
+    const privacy = this.getPrivacySettings(userId);
+    if (!privacy.personalMemory || privacy.dataStorageMode === 'no_storage') {
+      return [];
+    }
+
+    const activeMemories = this.data.memoryItems.filter(
+      (m) => m.userId === userId && !m.disabled && m.isConfirmed !== false
+    );
+
+    if (!query || !query.trim()) {
+      return activeMemories
+        .sort((a, b) => b.confidence - a.confidence || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, limit);
+    }
+
+    const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const scored = activeMemories.map((mem) => {
+      let score = mem.confidence;
+      const textToSearch = `${mem.key} ${mem.category} ${mem.value} ${mem.reason} ${(mem.tags || []).join(' ')}`.toLowerCase();
+      for (const token of tokens) {
+        if (textToSearch.includes(token)) score += 1.5;
+      }
+      return { mem, score };
+    });
+
+    return scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map((item) => item.mem);
   }
 
   // --- Delete ALL Memory (GDPR / Privacy requirement) ---
   deleteAllMemory(userId: string): { success: boolean; clearedCount: number } {
     const memoryCount = this.data.memoryItems.filter((m) => m.userId === userId).length;
     const signalCount = this.data.tasteSignals.filter((s) => s.userId === userId).length;
+    const taskCount = this.data.tasks.filter((t) => t.userId === userId).length;
 
     this.data.memoryItems = this.data.memoryItems.filter((m) => m.userId !== userId);
     this.data.tasteSignals = this.data.tasteSignals.filter((s) => s.userId !== userId);
     this.data.viewingSessions = this.data.viewingSessions.filter((s) => s.userId !== userId);
     this.data.visualObservations = this.data.visualObservations.filter((s) => s.userId !== userId);
     this.data.conversationMessages = this.data.conversationMessages.filter((m) => m.userId !== userId);
+    this.data.tasks = this.data.tasks.filter((t) => t.userId !== userId);
+    this.data.activityLogs = this.data.activityLogs.filter((a) => a.userId !== userId);
 
     // Reset taste profile to clean initial state
     const tpIdx = this.data.tasteProfiles.findIndex((p) => p.userId === userId);
@@ -710,6 +876,123 @@ class Database {
       );
     }
     this.save();
+  }
+
+  // --- Tasks Subsystem ---
+  getTasks(userId: string): TaskRecord[] {
+    return this.data.tasks.filter((t) => t.userId === userId);
+  }
+
+  getTaskById(userId: string, taskId: string): TaskRecord | null {
+    return this.data.tasks.find((t) => t.userId === userId && t.id === taskId) || null;
+  }
+
+  createTask(
+    userId: string,
+    params: {
+      title: string;
+      description?: string;
+      type?: TaskType;
+      schedule?: TaskRecord['schedule'];
+    }
+  ): TaskRecord {
+    const newTask: TaskRecord = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      title: params.title.trim(),
+      description: params.description?.trim() || '',
+      type: params.type || 'video_summary',
+      status: 'pending',
+      progress: 0,
+      result: null,
+      error: null,
+      schedule: params.schedule || null,
+      retries: 0,
+      maxRetries: 3,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.data.tasks.unshift(newTask);
+    this.save();
+    this.logActivity(userId, `Created task: "${newTask.title}"`, 'task', `Type: ${newTask.type}`);
+    return newTask;
+  }
+
+  updateTask(userId: string, taskId: string, updates: Partial<TaskRecord>): TaskRecord | null {
+    const idx = this.data.tasks.findIndex((t) => t.userId === userId && t.id === taskId);
+    if (idx === -1) return null;
+
+    this.data.tasks[idx] = {
+      ...this.data.tasks[idx],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    this.save();
+    return this.data.tasks[idx];
+  }
+
+  cancelTask(userId: string, taskId: string): boolean {
+    const task = this.getTaskById(userId, taskId);
+    if (!task || task.status === 'completed') return false;
+
+    this.updateTask(userId, taskId, { status: 'cancelled' });
+    this.logActivity(userId, `Cancelled task: "${task.title}"`, 'task', 'Status updated to cancelled');
+    return true;
+  }
+
+  retryTask(userId: string, taskId: string): TaskRecord | null {
+    const task = this.getTaskById(userId, taskId);
+    if (!task) return null;
+
+    if (task.retries >= task.maxRetries) {
+      return null;
+    }
+
+    const updated = this.updateTask(userId, taskId, {
+      status: 'pending',
+      progress: 0,
+      error: null,
+      retries: task.retries + 1,
+    });
+    this.logActivity(
+      userId,
+      `Retried task: "${task.title}"`,
+      'task',
+      `Attempt ${task.retries + 1} of ${task.maxRetries}`
+    );
+    return updated;
+  }
+
+  // --- Activity Timeline ---
+  getActivityLogs(userId: string, limit: number = 50): ActivityLogRecord[] {
+    return this.data.activityLogs
+      .filter((a) => a.userId === userId)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  }
+
+  logActivity(
+    userId: string,
+    action: string,
+    category: ActivityLogRecord['category'],
+    details: string
+  ): ActivityLogRecord {
+    const newLog: ActivityLogRecord = {
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      action,
+      category,
+      details,
+      timestamp: new Date().toISOString(),
+    };
+
+    this.data.activityLogs.unshift(newLog);
+    if (this.data.activityLogs.length > 200) {
+      this.data.activityLogs = this.data.activityLogs.slice(0, 200);
+    }
+    this.save();
+    return newLog;
   }
 }
 

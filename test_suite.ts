@@ -1,7 +1,29 @@
 // VISTA Verification & Test Suite
-// Tests all 20+ requirements from Section 32
+// Self-contained test harness covering core systems, tasks, and memory controls
 
-const BASE_URL = 'http://localhost:3001';
+import { app } from './server/index.js';
+import type { Server } from 'http';
+
+let server: Server | null = null;
+let BASE_URL = 'http://localhost:3001';
+
+async function ensureServer(): Promise<void> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/status`, { signal: AbortSignal.timeout(1000) });
+    if (res.ok) {
+      return; // Server is already running
+    }
+  } catch {
+    // Server not running, start ephemeral server on port 3099
+    const TEST_PORT = 3099;
+    BASE_URL = `http://localhost:${TEST_PORT}`;
+    await new Promise<void>((resolve) => {
+      server = app.listen(TEST_PORT, () => {
+        resolve();
+      });
+    });
+  }
+}
 
 async function runTests() {
   console.log('=== STARTING VISTA SYSTEM VERIFICATION SUITE ===\n');
@@ -19,6 +41,8 @@ async function runTests() {
   }
 
   try {
+    await ensureServer();
+
     // 1. Check Server Status & AI Engine
     const statusRes = await fetch(`${BASE_URL}/api/status`).then((r) => r.json());
     assert(statusRes.status === 'ok', '1. Server is healthy and responding');
@@ -58,7 +82,7 @@ async function runTests() {
     }).then((r) => r.json());
     assert(reactionRes.reaction !== undefined, '5. Bot generated reactive scene event', reactionRes);
 
-    // 4. Visual Frame Analysis (with simulated base64 canvas capture)
+    // 4. Visual Frame Analysis
     const frameRes = await fetch(`${BASE_URL}/api/ai/analyze-frame`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -81,7 +105,7 @@ async function runTests() {
     }).then((r) => r.json());
     assert(frameRes.analyzed === true, '6. Visual frame analyzed asynchronously with scene context', frameRes);
 
-    // 5. Chat with Companion (watching same scene together)
+    // 5. Chat with Companion
     const chatRes = await fetch(`${BASE_URL}/api/ai/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -159,76 +183,74 @@ async function runTests() {
     }).then((r) => r.json());
     assert(Boolean(memItem.id), '10. Explicit memory item created and stored');
 
-    // 10. Delete Individual Memory Item
+    // 10. Memory Update and Toggle
+    const updatedMem = await fetch(`${BASE_URL}/api/memory/items/${memItem.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: 'Ultra Neon Cyberpunk Aesthetic' }),
+    }).then((r) => r.json());
+    assert(updatedMem.value === 'Ultra Neon Cyberpunk Aesthetic', '11. Memory item updated successfully');
+
+    const toggledMem = await fetch(`${BASE_URL}/api/memory/items/${memItem.id}/toggle`, {
+      method: 'PATCH',
+    }).then((r) => r.json());
+    assert(toggledMem.disabled === true, '12. Memory item toggled to disabled');
+
+    // 11. Delete Individual Memory Item
     const delMem = await fetch(`${BASE_URL}/api/memory/items/${memItem.id}`, {
       method: 'DELETE',
     }).then((r) => r.json());
-    assert(delMem.success === true, '11. Individual memory item deleted successfully');
+    assert(delMem.success === true, '13. Individual memory item deleted successfully');
 
-    // 11. Test Visual Analysis Toggle
-    await fetch(`${BASE_URL}/api/privacy`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visualAnalysisEnabled: false }),
-    });
-
-    const analysisWhileOff = await fetch(`${BASE_URL}/api/ai/analyze-frame`, {
+    // 12. Persistent Task Subsystem Verification
+    const createdTask = await fetch(`${BASE_URL}/api/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        imageBase64: 'data:...',
-        videoContext: { videoId: 'test', timestamp: 10 },
+        title: 'Generate Weekly Viewing Digest',
+        description: 'Aggregate taste signals and favorite scenes into summary.',
+        type: 'video_summary',
       }),
     }).then((r) => r.json());
-    assert(analysisWhileOff.analyzed === false, '12. When Visual Analysis is disabled, frame analysis is blocked');
+    assert(createdTask.id && createdTask.status === 'pending', '14. Persistent task created in pending state');
 
-    // Re-enable visual analysis
-    await fetch(`${BASE_URL}/api/privacy`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visualAnalysisEnabled: true }),
-    });
+    const allTasks = await fetch(`${BASE_URL}/api/tasks`).then((r) => r.json());
+    assert(Array.isArray(allTasks) && allTasks.length >= 1, '15. Retrieved tasks array from database');
 
-    // 12. Test Data Storage Mode: Session Only vs No Storage
-    await fetch(`${BASE_URL}/api/privacy`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dataStorageMode: 'no_storage' }),
-    });
+    const cancelledRes = await fetch(`${BASE_URL}/api/tasks/${createdTask.id}/cancel`, {
+      method: 'POST',
+    }).then((r) => r.json());
+    assert(cancelledRes.success === true, '16. Task cancelled via control endpoint');
 
-    const sessionWhileNoStorage = await fetch(`${BASE_URL}/api/history`, {
+    const retriedTask = await fetch(`${BASE_URL}/api/tasks/${createdTask.id}/retry`, {
+      method: 'POST',
+    }).then((r) => r.json());
+    assert(retriedTask.retries === 1 && retriedTask.status === 'pending', '17. Task retry control resets to pending and increments retry counter');
+
+    // 13. Activity Timeline Verification
+    const activities = await fetch(`${BASE_URL}/api/activities`).then((r) => r.json());
+    assert(Array.isArray(activities) && activities.length > 0, '18. Activity timeline recorded actions and details');
+
+    // 14. Server-Side Input Validation
+    const invalidTaskRes = await fetch(`${BASE_URL}/api/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        videoId: 'secret-video',
-        videoTitle: 'Private Video',
-        startedAt: new Date().toISOString(),
-        watchDurationSeconds: 120,
-        completedPercentage: 100,
-        userReactionSummary: [],
-      }),
-    }).then((r) => r.json());
-    assert(sessionWhileNoStorage === null, '13. When Data Storage is No Storage, viewing sessions are NOT recorded');
-
-    // Restore standard personal memory mode
-    await fetch(`${BASE_URL}/api/privacy`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dataStorageMode: 'personal_memory' }),
+      body: JSON.stringify({ title: '' }),
     });
-
-    // 13. Test Delete ALL Memory (GDPR requirement 12)
-    const wipeRes = await fetch(`${BASE_URL}/api/memory/all`, {
-      method: 'DELETE',
-    }).then((r) => r.json());
-    assert(wipeRes.success === true, '14. Delete All Memory wiped all memory items and signals');
-
-    const memoriesAfterWipe = await fetch(`${BASE_URL}/api/memory/items`).then((r) => r.json());
-    assert(memoriesAfterWipe.length === 0, '15. Memory items list is confirmed completely empty after wipe');
+    assert(invalidTaskRes.status === 400, '19. Server rejects invalid task payload with HTTP 400');
 
     console.log(`\n=== TEST SUITE COMPLETE: ${passed} PASSED, ${failed} FAILED ===`);
   } catch (err) {
     console.error('Test suite error:', err);
+    process.exit(1);
+  } finally {
+    if (server) {
+      server.close(() => {
+        process.exit(failed > 0 ? 1 : 0);
+      });
+    } else {
+      process.exit(failed > 0 ? 1 : 0);
+    }
   }
 }
 

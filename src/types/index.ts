@@ -138,8 +138,45 @@ export interface MemoryItem {
   confidence: number; // 0.0 to 1.0
   sourceCount: number;
   reason: string;
+  source?: 'user_explicit' | 'confirmed_inference' | 'video_observation';
+  isConfirmed?: boolean;
+  disabled?: boolean;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type TaskStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type TaskType = 'video_summary' | 'preference_refresh' | 'scene_index' | 'custom_agent';
+
+export interface TaskItem {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  type: TaskType;
+  status: TaskStatus;
+  progress: number;
+  result?: any;
+  error?: string | null;
+  schedule?: {
+    recurring?: boolean;
+    intervalMinutes?: number;
+    nextRun?: string;
+  } | null;
+  retries: number;
+  maxRetries: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActivityLogItem {
+  id: string;
+  userId: string;
+  action: string;
+  category: 'task' | 'memory' | 'vision' | 'privacy' | 'chat';
+  details: string;
+  timestamp: string;
 }
 
 export interface TasteProfile {

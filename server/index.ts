@@ -165,6 +165,41 @@ app.delete('/api/memory/items/:id', (req, res) => {
   res.json({ success });
 });
 
+app.put('/api/memory/items/:id', (req, res) => {
+  const userId = getUserId(req);
+  const { value, category, reason, isConfirmed, disabled, tags } = req.body;
+  const updated = db.updateMemoryItem(userId, req.params.id, {
+    value,
+    category,
+    reason,
+    isConfirmed,
+    disabled,
+    tags,
+  });
+  if (!updated) {
+    return res.status(404).json({ error: 'Memory item not found' });
+  }
+  res.json(updated);
+});
+
+app.patch('/api/memory/items/:id/toggle', (req, res) => {
+  const userId = getUserId(req);
+  const updated = db.toggleMemoryItem(userId, req.params.id);
+  if (!updated) {
+    return res.status(404).json({ error: 'Memory item not found' });
+  }
+  res.json(updated);
+});
+
+app.post('/api/memory/items/:id/confirm', (req, res) => {
+  const userId = getUserId(req);
+  const updated = db.confirmMemoryItem(userId, req.params.id);
+  if (!updated) {
+    return res.status(404).json({ error: 'Memory item not found' });
+  }
+  res.json(updated);
+});
+
 // --- Delete ALL Memory (GDPR / Strict Privacy) ---
 app.delete('/api/memory/all', (req, res) => {
   const userId = getUserId(req);
@@ -391,6 +426,80 @@ app.delete('/api/chat/history', (req, res) => {
   res.json({ success: true });
 });
 
+// --- Tasks Routes ---
+app.get('/api/tasks', (req, res) => {
+  const userId = getUserId(req);
+  const tasks = db.getTasks(userId);
+  res.json(tasks);
+});
+
+app.post('/api/tasks', (req, res) => {
+  const userId = getUserId(req);
+  const { title, description, type, schedule } = req.body;
+
+  if (!title || typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ error: 'Valid task title required' });
+  }
+
+  const validTypes = ['video_summary', 'preference_refresh', 'scene_index', 'custom_agent'];
+  if (type && !validTypes.includes(type)) {
+    return res.status(400).json({ error: `Invalid task type. Must be one of: ${validTypes.join(', ')}` });
+  }
+
+  const task = db.createTask(userId, {
+    title: title.trim(),
+    description,
+    type,
+    schedule,
+  });
+  res.status(201).json(task);
+});
+
+app.put('/api/tasks/:id', (req, res) => {
+  const userId = getUserId(req);
+  const { title, description, status, progress, result, error } = req.body;
+
+  const updated = db.updateTask(userId, req.params.id, {
+    ...(title ? { title } : {}),
+    ...(description !== undefined ? { description } : {}),
+    ...(status ? { status } : {}),
+    ...(progress !== undefined ? { progress } : {}),
+    ...(result !== undefined ? { result } : {}),
+    ...(error !== undefined ? { error } : {}),
+  });
+
+  if (!updated) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+  res.json(updated);
+});
+
+app.post('/api/tasks/:id/cancel', (req, res) => {
+  const userId = getUserId(req);
+  const success = db.cancelTask(userId, req.params.id);
+  if (!success) {
+    return res.status(400).json({ error: 'Task not found or cannot be cancelled' });
+  }
+  res.json({ success: true, message: 'Task cancelled' });
+});
+
+app.post('/api/tasks/:id/retry', (req, res) => {
+  const userId = getUserId(req);
+  const task = db.retryTask(userId, req.params.id);
+  if (!task) {
+    return res.status(400).json({ error: 'Task not found or max retries exceeded' });
+  }
+  res.json(task);
+});
+
+// --- Activity Timeline Route ---
+app.get('/api/activities', (req, res) => {
+  const userId = getUserId(req);
+  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+  const activities = db.getActivityLogs(userId, isNaN(limit) ? 50 : limit);
+  res.json(activities);
+});
+
 // Serve static assets from Vite build
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
@@ -401,7 +510,11 @@ app.get('*', (req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`[VISTA Backend] Server listening on http://localhost:${PORT}`);
-  console.log(`[VISTA Backend] Active AI Provider: ${providerFactory.getStatus().providerName}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`[VISTA Backend] Server listening on http://localhost:${PORT}`);
+    console.log(`[VISTA Backend] Active AI Provider: ${providerFactory.getStatus().providerName}`);
+  });
+}
+
+export { app };

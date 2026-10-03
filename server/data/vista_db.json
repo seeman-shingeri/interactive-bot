@@ -11,12 +11,12 @@
       "userId": "default_user",
       "name": "Nova",
       "avatarColor": "emerald",
-      "personality": "Analytical",
+      "personality": "Curious",
       "customInstructions": "You are curious, warm, and love pointing out cool visual details without talking too much. React naturally like two friends watching together.",
       "tone": "casual",
       "reactionFrequency": "Balanced",
       "talkativeness": 3,
-      "humorLevel": 3,
+      "humorLevel": 4,
       "energyLevel": 3,
       "expressiveness": 4,
       "position": "right",
@@ -59,7 +59,11 @@
       "sourceCount": 3,
       "reason": "Watched Cosmic Horizons with multiple positive reactions and completion.",
       "createdAt": "2026-09-25T14:30:00.000Z",
-      "updatedAt": "2026-09-26T10:00:00.000Z"
+      "updatedAt": "2026-09-26T10:00:00.000Z",
+      "source": "user_explicit",
+      "isConfirmed": true,
+      "disabled": false,
+      "tags": []
     },
     {
       "id": "mem_seed_2",
@@ -71,7 +75,11 @@
       "sourceCount": 2,
       "reason": "Reacted with love to neon aesthetic shots in Cyber City 2099.",
       "createdAt": "2026-09-25T16:00:00.000Z",
-      "updatedAt": "2026-09-26T11:20:00.000Z"
+      "updatedAt": "2026-09-26T11:20:00.000Z",
+      "source": "user_explicit",
+      "isConfirmed": true,
+      "disabled": false,
+      "tags": []
     }
   ],
   "tasteSignals": [
@@ -146,6 +154,111 @@
       "sourceReason": "Simulation user liked rainy neon alley aesthetic",
       "id": "sig_1790534010914_2nxth",
       "timestamp": "2026-09-27T18:33:30.914Z"
+    },
+    {
+      "userId": "default_user",
+      "videoId": "cyber-city-2099",
+      "videoTitle": "Cyber City 2099",
+      "signalType": "watch_complete",
+      "category": "Sci-Fi",
+      "genres": [
+        "Sci-Fi"
+      ],
+      "themes": [
+        "Tense & Gritty"
+      ],
+      "visualStyle": "Neon Cyberpunk / Space",
+      "sourceReason": "Watched scene in Cyber City 2099 with sustained focus",
+      "id": "sig_1791052641613_6c1yv",
+      "timestamp": "2026-10-03T18:37:21.613Z"
+    },
+    {
+      "userId": "default_user",
+      "videoId": "cosmic-horizons",
+      "videoTitle": "Cosmic Horizons",
+      "signalType": "love",
+      "category": "Sci-Fi",
+      "genres": [
+        "Sci-Fi",
+        "Astronomy"
+      ],
+      "themes": [
+        "Space Exploration"
+      ],
+      "visualStyle": "Deep Space",
+      "sourceReason": "User reacted with Love",
+      "id": "sig_1791052641630_dyduk",
+      "timestamp": "2026-10-03T18:37:21.630Z"
+    },
+    {
+      "userId": "default_user",
+      "videoId": "cyber-city-2099",
+      "videoTitle": "Cyber City 2099",
+      "signalType": "watch_complete",
+      "category": "Sci-Fi",
+      "genres": [
+        "Sci-Fi"
+      ],
+      "themes": [
+        "Tense & Gritty"
+      ],
+      "visualStyle": "Neon Cyberpunk / Space",
+      "sourceReason": "Watched scene in Cyber City 2099 with sustained focus",
+      "id": "sig_1791052672799_6g4h8",
+      "timestamp": "2026-10-03T18:37:52.799Z"
+    },
+    {
+      "userId": "default_user",
+      "videoId": "cosmic-horizons",
+      "videoTitle": "Cosmic Horizons",
+      "signalType": "love",
+      "category": "Sci-Fi",
+      "genres": [
+        "Sci-Fi",
+        "Astronomy"
+      ],
+      "themes": [
+        "Space Exploration"
+      ],
+      "visualStyle": "Deep Space",
+      "sourceReason": "User reacted with Love",
+      "id": "sig_1791052672812_wtmxx",
+      "timestamp": "2026-10-03T18:37:52.812Z"
+    },
+    {
+      "userId": "default_user",
+      "videoId": "cyber-city-2099",
+      "videoTitle": "Cyber City 2099",
+      "signalType": "watch_complete",
+      "category": "Sci-Fi",
+      "genres": [
+        "Sci-Fi"
+      ],
+      "themes": [
+        "Tense & Gritty"
+      ],
+      "visualStyle": "Neon Cyberpunk / Space",
+      "sourceReason": "Watched scene in Cyber City 2099 with sustained focus",
+      "id": "sig_1791053172444_ol62d",
+      "timestamp": "2026-10-03T18:46:12.444Z"
+    },
+    {
+      "userId": "default_user",
+      "videoId": "cosmic-horizons",
+      "videoTitle": "Cosmic Horizons",
+      "signalType": "love",
+      "category": "Sci-Fi",
+      "genres": [
+        "Sci-Fi",
+        "Astronomy"
+      ],
+      "themes": [
+        "Space Exploration"
+      ],
+      "visualStyle": "Deep Space",
+      "sourceReason": "User reacted with Love",
+      "id": "sig_1791053172461_rt3yg",
+      "timestamp": "2026-10-03T18:46:12.461Z"
     }
   ],
   "tasteProfiles": [
@@ -157,33 +270,37 @@
         "Animation": 0.65,
         "Documentary": 0.58,
         "Comedy": 0.7,
-        "Astronomy": 0.65,
+        "Astronomy": 1,
         "Action": 0.58
       },
       "themes": {
         "Space Exploration": 1,
         "High-Tech Megacity": 0.92,
         "Artificial Intelligence": 0.76,
-        "Micro-Ecosystems": 0.62
+        "Micro-Ecosystems": 0.62,
+        "Tense & Gritty": 0.65
       },
       "visualPreferences": {
         "Neon Cyber": 0.96,
         "Dark Cinematic": 0.82,
         "Deep Space": 1,
-        "Turquoise Waters": 0.6
+        "Turquoise Waters": 0.6,
+        "Neon Cyberpunk / Space": 0.65
       },
       "pacingPreference": "balanced",
       "skippedCategories": [
         "Horror"
       ],
       "frequentlyWatched": [
+        "Cosmic Horizons",
+        "Cyber City 2099",
         "Cyber City 2099: Neon Syndicate",
         "Cosmic Horizons: Deep Space Nebula"
       ],
-      "positiveReactionsCount": 7,
+      "positiveReactionsCount": 13,
       "totalVideosWatched": 4,
       "totalWatchTimeSeconds": 590,
-      "lastUpdated": "2026-09-27T18:33:30.915Z"
+      "lastUpdated": "2026-10-03T18:46:12.461Z"
     }
   ],
   "viewingSessions": [
@@ -212,7 +329,28 @@
       ]
     }
   ],
-  "visualObservations": [],
+  "visualObservations": [
+    {
+      "userId": "default_user",
+      "sessionId": "active_session",
+      "videoId": "cyber-city-2099",
+      "timestamp": 25,
+      "brightness": 0.65,
+      "motionIntensity": 0.5,
+      "dominantColors": [
+        "#00d2ff",
+        "#9d4edd",
+        "#090b10"
+      ],
+      "detectedObjects": [
+        "Cybernetic visor",
+        "Neon signs"
+      ],
+      "sceneDescription": "Cybernetic operative weaving through dark alleys reflecting neon signs",
+      "id": "obs_1791053172443_4ogi",
+      "observedAt": "2026-10-03T18:46:12.443Z"
+    }
+  ],
   "conversationMessages": [
     {
       "id": "msg_seed_1",
@@ -279,6 +417,123 @@
       "emotion": "attentive",
       "id": "msg_1790602265362_7h2p",
       "timestamp": "2026-09-28T13:31:05.362Z"
+    },
+    {
+      "userId": "default_user",
+      "sessionId": "default_session",
+      "sender": "user",
+      "text": "What just happened in this scene?",
+      "videoTimestamp": 95,
+      "id": "msg_1791053172451_d8gv",
+      "timestamp": "2026-10-03T18:46:12.451Z"
+    },
+    {
+      "userId": "default_user",
+      "sessionId": "default_session",
+      "sender": "bot",
+      "text": "Right now we're watching \"Quantum Anomaly Flare\". Sudden gravitational pulse distortion. Notice the Thrilling atmosphere and the fast pacing.",
+      "videoTimestamp": 95,
+      "emotion": "attentive",
+      "id": "msg_1791053172453_n51q",
+      "timestamp": "2026-10-03T18:46:12.453Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_1791053172514_diyi",
+      "userId": "default_user",
+      "title": "Generate Weekly Viewing Digest",
+      "description": "Aggregate taste signals and favorite scenes into summary.",
+      "type": "video_summary",
+      "status": "pending",
+      "progress": 0,
+      "result": null,
+      "error": null,
+      "schedule": null,
+      "retries": 1,
+      "maxRetries": 3,
+      "createdAt": "2026-10-03T18:46:12.514Z",
+      "updatedAt": "2026-10-03T18:46:12.528Z"
+    },
+    {
+      "id": "task_init_1",
+      "userId": "default_user",
+      "title": "Analyze Initial Viewing Preferences",
+      "description": "Synthesize preference seeds and calculate visual resonance scores.",
+      "type": "preference_refresh",
+      "status": "completed",
+      "progress": 100,
+      "result": {
+        "analyzedCategories": 3,
+        "resonantTraits": [
+          "Sci-Fi",
+          "Neon Cyber"
+        ]
+      },
+      "error": null,
+      "schedule": null,
+      "retries": 0,
+      "maxRetries": 3,
+      "createdAt": "2026-10-03T17:37:21.084Z",
+      "updatedAt": "2026-10-03T17:39:01.084Z"
+    }
+  ],
+  "activityLogs": [
+    {
+      "id": "act_1791053172528_y1xj",
+      "userId": "default_user",
+      "action": "Retried task: \"Generate Weekly Viewing Digest\"",
+      "category": "task",
+      "details": "Attempt 1 of 3",
+      "timestamp": "2026-10-03T18:46:12.528Z"
+    },
+    {
+      "id": "act_1791053172524_dzye",
+      "userId": "default_user",
+      "action": "Cancelled task: \"Generate Weekly Viewing Digest\"",
+      "category": "task",
+      "details": "Status updated to cancelled",
+      "timestamp": "2026-10-03T18:46:12.524Z"
+    },
+    {
+      "id": "act_1791053172515_k1bh",
+      "userId": "default_user",
+      "action": "Created task: \"Generate Weekly Viewing Digest\"",
+      "category": "task",
+      "details": "Type: video_summary",
+      "timestamp": "2026-10-03T18:46:12.515Z"
+    },
+    {
+      "id": "act_1791053172508_2qjm",
+      "userId": "default_user",
+      "action": "Deleted memory item",
+      "category": "memory",
+      "details": "Memory ID: mem_1791053172487_dlid",
+      "timestamp": "2026-10-03T18:46:12.508Z"
+    },
+    {
+      "id": "act_1791053172502_5cdr",
+      "userId": "default_user",
+      "action": "Disabled memory: \"pref_cyberpunk_neon\"",
+      "category": "memory",
+      "details": "Status: Disabled",
+      "timestamp": "2026-10-03T18:46:12.502Z"
+    },
+    {
+      "id": "act_1791053172496_yl3w",
+      "userId": "default_user",
+      "action": "Updated memory item: \"pref_cyberpunk_neon\"",
+      "category": "memory",
+      "details": "Value: Ultra Neon Cyberpunk Aesthetic",
+      "timestamp": "2026-10-03T18:46:12.496Z"
+    },
+    {
+      "id": "act_init_1",
+      "userId": "default_user",
+      "action": "VISTA Companion Initialized",
+      "category": "privacy",
+      "details": "Companion loaded with sovereign local memory boundary.",
+      "timestamp": "2026-10-03T18:37:21.084Z"
     }
   ]
 }
