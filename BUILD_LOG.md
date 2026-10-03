@@ -52,5 +52,34 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run test:stress`: 10/10 resilience checks passed.
   - `npm run build`: Production build verified with zero errors (7.15s).
-- **Commit Hash**: Pending commit
-- **Push Status**: Pending push
+- **Commit Hash**: `a295678`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-04 — Stage 4: Video Intelligence & Persistent Task Center
+
+- **Task Name**: Stage 4 — Video Intelligence & Persistent Task Center
+- **Feature / Fix**:
+  - Eliminated continuous video frame capture and upload loop (previously every 5.5s) in `src/components/video/VideoPlayer.tsx`.
+  - Implemented event-driven scene change checks throttled to a minimum 25s interval, with local luminance diff gating before querying AI analysis.
+  - Added user-triggered "Analyze Current Frame" on-demand snapshot button with visual indicator and scene metadata context.
+  - Created persistent `TaskCenter` component (`src/components/tasks/TaskCenter.tsx`):
+    - KPI dashboard cards (Completed, Running, Scheduled/Pending, Failed).
+    - Status filtering tabs (`All`, `Pending`, `Running`, `Completed`, `Failed`, `Cancelled`).
+    - Task creation modal with task types (`video_summary`, `memory_cleanup`, `taste_update`, `scheduled_digest`), recurring interval scheduling, and description.
+    - Status badges, animated progress bars, retry counters, and failure error diagnostics.
+    - 1-click Cancel and Retry task controls.
+    - Collapsible Activity Timeline displaying chronological audit history of companion operations.
+  - Added `tasks` navigation item in `src/components/common/Navbar.tsx` with `ListTodo` icon.
+  - Wired full task & activity state management, async operations, and `<TaskCenter />` tab view into `src/App.tsx`.
+- **Tests & Build Results**:
+  - `npm test`: 19/19 integration tests passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (7.61s).
+- **Commit Hash**: `c57951c`
+- **Push Status**: Successfully pushed to `origin/main`
+

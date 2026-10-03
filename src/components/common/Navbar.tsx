@@ -13,10 +13,11 @@ import {
   Database,
   Download,
   Keyboard,
+  ListTodo,
 } from 'lucide-react';
 import { PrivacySettings, BotSettings } from '../../types/index.js';
 
-export type NavTab = 'watch' | 'taste' | 'studio' | 'privacy' | 'history' | 'config';
+export type NavTab = 'watch' | 'taste' | 'studio' | 'tasks' | 'privacy' | 'history' | 'config';
 
 interface NavbarProps {
   currentTab: NavTab;
@@ -46,6 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'watch' as NavTab, label: 'Watch Room', icon: <Tv className="w-4 h-4" /> },
     { id: 'taste' as NavTab, label: 'Taste Profile', icon: <Sparkles className="w-4 h-4" /> },
     { id: 'studio' as NavTab, label: 'Bot Studio', icon: <Bot className="w-4 h-4" /> },
+    { id: 'tasks' as NavTab, label: 'Tasks & Activity', icon: <ListTodo className="w-4 h-4" /> },
     { id: 'privacy' as NavTab, label: 'Privacy & Memory', icon: <Shield className="w-4 h-4" /> },
     { id: 'history' as NavTab, label: 'History', icon: <History className="w-4 h-4" /> },
     { id: 'config' as NavTab, label: 'AI Engine', icon: <Cpu className="w-4 h-4" /> },

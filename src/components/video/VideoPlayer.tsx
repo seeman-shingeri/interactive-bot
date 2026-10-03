@@ -21,6 +21,7 @@ import {
   Layers,
   Upload,
   AlertCircle,
+  Camera,
 } from 'lucide-react';
 import { VideoItem, SceneMetadata, TranscriptCue, BotReaction } from '../../types/index.js';
 import { VideoFrameSampler } from './VideoFrameSampler.js';
@@ -104,8 +105,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setCurrentTranscriptCue(cue || null);
   }, [currentTime, currentVideo.transcript]);
 
-  // Intelligent Asynchronous Frame Sampler Loop with Background Tab Throttling
-  // Samples every 6-8 seconds, or immediately if scene cuts
+  // Event-Driven Video Frame Analysis Loop:
+  // Strictly avoids continuous frame capture and uploads. Only analyzes when a significant
+  // scene luminance shift occurs, with a 25s debounce cooldown window.
   useEffect(() => {
     if (!isPlaying || !visualAnalysisEnabled) return;
 
@@ -117,17 +119,29 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (!video || video.paused) return;
 
       const now = video.currentTime;
-      if (Math.abs(now - lastSampledTime) < 4.0) return; // avoid too frequent calls
+      if (Math.abs(now - lastSampledTime) < 25.0) return; // avoid frequent background frame uploads
 
       const sample = samplerRef.current.sample(video);
-      if (sample) {
+      // Only invoke vision analysis on genuine optical scene transitions
+      if (sample && sample.isPotentialSceneChange) {
         setLastSampledTime(now);
         onFrameAnalyzed(sample, currentScene);
       }
-    }, 5500);
+    }, 6000);
 
     return () => clearInterval(interval);
   }, [isPlaying, visualAnalysisEnabled, lastSampledTime, currentScene, onFrameAnalyzed]);
+
+  // On-demand user-triggered frame analysis
+  const handleManualSnapshot = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const sample = samplerRef.current.sample(video);
+    if (sample) {
+      setLastSampledTime(video.currentTime);
+      onFrameAnalyzed(sample, currentScene);
+    }
+  }, [currentScene, onFrameAnalyzed]);
 
   // Play / Pause toggle
   const togglePlay = () => {
@@ -402,6 +416,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 title="Captions / Subtitles"
               >
                 <Captions className="w-4 h-4" />
+              </button>
+
+              {/* On-Demand Frame Snapshot / Scene Analysis */}
+              <button
+                onClick={handleManualSnapshot}
+                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-cyan-600/30 hover:bg-cyan-500/50 border border-cyan-400/40 text-cyan-200 text-xs font-semibold shadow-md transition-all active:scale-95"
+                title="Snapshot current frame & ask VISTA to analyze"
+              >
+                <Camera className="w-3.5 h-3.5 text-cyan-300" />
+                <span className="hidden sm:inline">Snapshot</span>
               </button>
 
               {/* Fullscreen toggle */}

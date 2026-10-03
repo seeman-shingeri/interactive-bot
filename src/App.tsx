@@ -11,6 +11,8 @@ import {
   BotEmotion,
   VideoItem,
   SceneMetadata,
+  TaskItem,
+  ActivityLogItem,
 } from './types/index.js';
 import { SAMPLE_VIDEOS } from './data/sampleVideos.js';
 import { api } from './services/api.js';
@@ -22,6 +24,7 @@ import { VideoPlayer } from './components/video/VideoPlayer.js';
 import { CompanionAvatar } from './components/companion/CompanionAvatar.js';
 import { CompanionChat } from './components/chat/CompanionChat.js';
 import { TasteProfileView } from './components/taste/TasteProfileView.js';
+import { TaskCenter } from './components/tasks/TaskCenter.js';
 import { PrivacyMemoryCenter } from './components/memory/PrivacyMemoryCenter.js';
 import { BotStudio } from './components/studio/BotStudio.js';
 import { ViewingHistoryView } from './components/history/ViewingHistoryView.js';
@@ -103,6 +106,8 @@ export const App: React.FC = () => {
 
   const [tasteSignals, setTasteSignals] = useState<TasteSignal[]>([]);
   const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([]);
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [activities, setActivities] = useState<ActivityLogItem[]>([]);
   const [viewingHistory, setViewingHistory] = useState<ViewingSession[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [aiStatus, setAiStatus] = useState<any>(null);
@@ -123,7 +128,7 @@ export const App: React.FC = () => {
   // Load initial backend state
   const loadData = useCallback(async () => {
     try {
-      const [statusRes, botRes, privacyRes, tasteRes, memRes, historyRes, chatRes] =
+      const [statusRes, botRes, privacyRes, tasteRes, memRes, historyRes, chatRes, tasksRes, actRes] =
         await Promise.all([
           api.getStatus(),
           api.getBotProfile(),
@@ -132,6 +137,8 @@ export const App: React.FC = () => {
           api.getMemoryItems(),
           api.getViewingHistory(),
           api.getChatHistory(),
+          api.getTasks(),
+          api.getActivities(),
         ]);
 
       setAiStatus(statusRes);
@@ -144,6 +151,8 @@ export const App: React.FC = () => {
       if (memRes) setMemoryItems(memRes);
       if (historyRes) setViewingHistory(historyRes);
       if (chatRes) setChatMessages(chatRes);
+      if (tasksRes) setTasks(tasksRes);
+      if (actRes) setActivities(actRes);
     } catch (err) {
       console.warn('Backend connection note:', err);
     }
@@ -674,6 +683,26 @@ export const App: React.FC = () => {
             }}
             onAddMemory={async (payload) => {
               await api.addMemoryItem(payload);
+              loadData();
+            }}
+            onRefresh={loadData}
+          />
+        )}
+
+        {currentTab === 'tasks' && (
+          <TaskCenter
+            tasks={tasks}
+            activities={activities}
+            onCreateTask={async (params) => {
+              await api.createTask(params);
+              loadData();
+            }}
+            onCancelTask={async (taskId) => {
+              await api.cancelTask(taskId);
+              loadData();
+            }}
+            onRetryTask={async (taskId) => {
+              await api.retryTask(taskId);
               loadData();
             }}
             onRefresh={loadData}
