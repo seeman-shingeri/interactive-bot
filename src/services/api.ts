@@ -15,52 +15,96 @@ import {
 
 const API_BASE = '/api';
 
+// In-flight request deduplication map
+const inFlightRequests = new Map<string, Promise<any>>();
+
+/**
+ * Executes a network fetch with automatic in-flight request deduplication
+ * for concurrent queries and AI analysis calls.
+ */
+async function fetchJson<T = any>(url: string, options?: RequestInit): Promise<T> {
+  const method = (options?.method || 'GET').toUpperCase();
+  const bodyKey = typeof options?.body === 'string' ? options.body : '';
+  const dedupKey = `${method}:${url}:${bodyKey}`;
+
+  // Deduplicate GET requests and read/eval AI calls while already in flight
+  const isDedupable = method === 'GET' || url.includes('/api/ai/') || url.includes('/api/status');
+  if (isDedupable && inFlightRequests.has(dedupKey)) {
+    return inFlightRequests.get(dedupKey)!;
+  }
+
+  const promise = (async () => {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok && res.status === 429) {
+        console.warn('VISTA API Rate Limited (429): Token budget threshold reached.');
+      }
+      return await res.json();
+    } finally {
+      inFlightRequests.delete(dedupKey);
+    }
+  })();
+
+  if (isDedupable) {
+    inFlightRequests.set(dedupKey, promise);
+  }
+
+  return promise;
+}
+
+/**
+ * Debounce helper for client-side event throttling
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delayMs: number = 300
+): (...args: Parameters<T>) => void {
+  let timer: any = null;
+  return (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delayMs);
+  };
+}
+
 export const api = {
   async getStatus() {
-    const res = await fetch(`${API_BASE}/status`);
-    return res.json();
+    return fetchJson(`${API_BASE}/status`);
   },
 
   async setApiKey(apiKey: string) {
-    const res = await fetch(`${API_BASE}/config/api-key`, {
+    return fetchJson(`${API_BASE}/config/api-key`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ apiKey }),
     });
-    return res.json();
   },
 
   async getBotProfile(): Promise<BotSettings> {
-    const res = await fetch(`${API_BASE}/bot-profile`);
-    return res.json();
+    return fetchJson(`${API_BASE}/bot-profile`);
   },
 
   async updateBotProfile(partial: Partial<BotSettings>): Promise<BotSettings> {
-    const res = await fetch(`${API_BASE}/bot-profile`, {
+    return fetchJson(`${API_BASE}/bot-profile`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(partial),
     });
-    return res.json();
   },
 
   async getPrivacySettings(): Promise<PrivacySettings> {
-    const res = await fetch(`${API_BASE}/privacy`);
-    return res.json();
+    return fetchJson(`${API_BASE}/privacy`);
   },
 
   async updatePrivacySettings(partial: Partial<PrivacySettings>): Promise<PrivacySettings> {
-    const res = await fetch(`${API_BASE}/privacy`, {
+    return fetchJson(`${API_BASE}/privacy`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(partial),
     });
-    return res.json();
   },
 
   async getTasteProfile(): Promise<{ profile: TasteProfile; signals: TasteSignal[] }> {
-    const res = await fetch(`${API_BASE}/taste-profile`);
-    return res.json();
+    return fetchJson(`${API_BASE}/taste-profile`);
   },
 
   async sendTasteSignal(payload: {
@@ -73,17 +117,15 @@ export const api = {
     visualStyle?: string;
     sourceReason?: string;
   }): Promise<{ signal: TasteSignal | null; updatedProfile: TasteProfile }> {
-    const res = await fetch(`${API_BASE}/taste-signal`, {
+    return fetchJson(`${API_BASE}/taste-signal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return res.json();
   },
 
   async getMemoryItems(): Promise<MemoryItem[]> {
-    const res = await fetch(`${API_BASE}/memory/items`);
-    return res.json();
+    return fetchJson(`${API_BASE}/memory/items`);
   },
 
   async addMemoryItem(payload: {
@@ -92,69 +134,60 @@ export const api = {
     value: string;
     reason?: string;
   }): Promise<MemoryItem> {
-    const res = await fetch(`${API_BASE}/memory/items`, {
+    return fetchJson(`${API_BASE}/memory/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return res.json();
   },
 
   async deleteMemoryItem(id: string): Promise<{ success: boolean }> {
-    const res = await fetch(`${API_BASE}/memory/items/${id}`, {
+    return fetchJson(`${API_BASE}/memory/items/${id}`, {
       method: 'DELETE',
     });
-    return res.json();
   },
 
   async updateMemoryItem(id: string, partial: Partial<MemoryItem>): Promise<MemoryItem> {
-    const res = await fetch(`${API_BASE}/memory/items/${id}`, {
+    return fetchJson(`${API_BASE}/memory/items/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(partial),
     });
-    return res.json();
   },
 
   async toggleMemoryItem(id: string): Promise<MemoryItem> {
-    const res = await fetch(`${API_BASE}/memory/items/${id}/toggle`, {
+    return fetchJson(`${API_BASE}/memory/items/${id}/toggle`, {
       method: 'PATCH',
     });
-    return res.json();
   },
 
   async confirmMemoryItem(id: string): Promise<MemoryItem> {
-    const res = await fetch(`${API_BASE}/memory/items/${id}/confirm`, {
+    return fetchJson(`${API_BASE}/memory/items/${id}/confirm`, {
       method: 'POST',
     });
-    return res.json();
   },
 
   async deleteAllMemory(): Promise<{ success: boolean; message: string; clearedCount: number }> {
-    const res = await fetch(`${API_BASE}/memory/all`, {
+    return fetchJson(`${API_BASE}/memory/all`, {
       method: 'DELETE',
     });
-    return res.json();
   },
 
   async getViewingHistory(): Promise<ViewingSession[]> {
-    const res = await fetch(`${API_BASE}/history`);
-    return res.json();
+    return fetchJson(`${API_BASE}/history`);
   },
 
   async recordViewingSession(session: Omit<ViewingSession, 'id' | 'userId'>): Promise<ViewingSession> {
-    const res = await fetch(`${API_BASE}/history`, {
+    return fetchJson(`${API_BASE}/history`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(session),
     });
-    return res.json();
   },
 
   async getObservations(videoId?: string): Promise<VisualObservation[]> {
     const url = videoId ? `${API_BASE}/observations?videoId=${videoId}` : `${API_BASE}/observations`;
-    const res = await fetch(url);
-    return res.json();
+    return fetchJson(url);
   },
 
   async analyzeFrame(payload: {
@@ -162,12 +195,11 @@ export const api = {
     sessionId?: string;
     videoContext: any;
   }) {
-    const res = await fetch(`${API_BASE}/ai/analyze-frame`, {
+    return fetchJson(`${API_BASE}/ai/analyze-frame`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return res.json();
   },
 
   async generateReaction(payload: {
@@ -175,12 +207,11 @@ export const api = {
     isSceneChange?: boolean;
     recentBotComments?: string[];
   }): Promise<{ reaction: BotReaction | null }> {
-    const res = await fetch(`${API_BASE}/ai/reaction`, {
+    return fetchJson(`${API_BASE}/ai/reaction`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return res.json();
   },
 
   async sendChatMessage(payload: {
@@ -189,29 +220,25 @@ export const api = {
     sessionId?: string;
     recentHistory?: { sender: 'user' | 'bot'; text: string }[];
   }): Promise<{ botReply: string; emotion: any; suggestedMemory?: any }> {
-    const res = await fetch(`${API_BASE}/ai/chat`, {
+    return fetchJson(`${API_BASE}/ai/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return res.json();
   },
 
   async getChatHistory(sessionId?: string): Promise<ChatMessage[]> {
     const url = sessionId ? `${API_BASE}/chat/history?sessionId=${sessionId}` : `${API_BASE}/chat/history`;
-    const res = await fetch(url);
-    return res.json();
+    return fetchJson(url);
   },
 
   async clearChatHistory(sessionId?: string): Promise<{ success: boolean }> {
     const url = sessionId ? `${API_BASE}/chat/history?sessionId=${sessionId}` : `${API_BASE}/chat/history`;
-    const res = await fetch(url, { method: 'DELETE' });
-    return res.json();
+    return fetchJson(url, { method: 'DELETE' });
   },
 
   async getTasks(): Promise<TaskItem[]> {
-    const res = await fetch(`${API_BASE}/tasks`);
-    return res.json();
+    return fetchJson(`${API_BASE}/tasks`);
   },
 
   async createTask(payload: {
@@ -220,39 +247,34 @@ export const api = {
     type?: TaskType;
     schedule?: TaskItem['schedule'];
   }): Promise<TaskItem> {
-    const res = await fetch(`${API_BASE}/tasks`, {
+    return fetchJson(`${API_BASE}/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return res.json();
   },
 
   async updateTask(id: string, updates: Partial<TaskItem>): Promise<TaskItem> {
-    const res = await fetch(`${API_BASE}/tasks/${id}`, {
+    return fetchJson(`${API_BASE}/tasks/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
     });
-    return res.json();
   },
 
   async cancelTask(id: string): Promise<{ success: boolean; message?: string }> {
-    const res = await fetch(`${API_BASE}/tasks/${id}/cancel`, {
+    return fetchJson(`${API_BASE}/tasks/${id}/cancel`, {
       method: 'POST',
     });
-    return res.json();
   },
 
   async retryTask(id: string): Promise<TaskItem> {
-    const res = await fetch(`${API_BASE}/tasks/${id}/retry`, {
+    return fetchJson(`${API_BASE}/tasks/${id}/retry`, {
       method: 'POST',
     });
-    return res.json();
   },
 
   async getActivities(limit: number = 50): Promise<ActivityLogItem[]> {
-    const res = await fetch(`${API_BASE}/activities?limit=${limit}`);
-    return res.json();
+    return fetchJson(`${API_BASE}/activities?limit=${limit}`);
   },
 };

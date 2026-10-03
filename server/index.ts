@@ -234,10 +234,29 @@ app.get('/api/observations', (req, res) => {
   res.json(observations);
 });
 
+// --- AI Request Budget & Rate Limiting Guard ---
+const aiRequestTracker = new Map<string, number[]>();
+const checkAiBudget = (userId: string, maxPerMinute: number = 60): boolean => {
+  if (process.env.NODE_ENV === 'test') return true;
+  const now = Date.now();
+  const windowStart = now - 60_000;
+  const timestamps = (aiRequestTracker.get(userId) || []).filter((t) => t > windowStart);
+  if (timestamps.length >= maxPerMinute) {
+    return false;
+  }
+  timestamps.push(now);
+  aiRequestTracker.set(userId, timestamps);
+  return true;
+};
+
 // --- AI Visual Analysis Route ---
 app.post('/api/ai/analyze-frame', async (req, res) => {
   const userId = getUserId(req);
   const privacy = db.getPrivacySettings(userId);
+
+  if (!checkAiBudget(userId)) {
+    return res.status(429).json({ error: 'AI budget limit reached. Please wait before making more requests.' });
+  }
 
   if (!privacy.visualAnalysisEnabled) {
     return res.json({
@@ -305,6 +324,10 @@ app.post('/api/ai/reaction', async (req, res) => {
     return res.json({ reaction: null, reason: 'Reactions are paused or bot is hidden' });
   }
 
+  if (!checkAiBudget(userId)) {
+    return res.status(429).json({ error: 'AI budget limit reached. Please wait before making more requests.' });
+  }
+
   const { videoContext, isSceneChange, recentBotComments } = req.body;
   const provider = providerFactory.getProvider();
 
@@ -350,6 +373,13 @@ app.post('/api/ai/chat', async (req, res) => {
     return res.status(400).json({ error: 'userMessage required' });
   }
 
+  if (!checkAiBudget(userId)) {
+    return res.status(429).json({ error: 'AI budget limit reached. Please wait before making more requests.' });
+  }
+
+  // Token optimization: rolling conversation window of most recent 6 messages
+  const rollingHistory = (recentHistory || []).slice(-6);
+
   // Selective relevance retrieval: only retrieve top 4 memories relevant to query/context
   const relevantQuery = `${userMessage} ${videoContext?.videoTitle || ''}`.trim();
   const memories = privacy.personalMemory ? db.getRelevantMemories(userId, relevantQuery, 4) : [];
@@ -384,7 +414,7 @@ app.post('/api/ai/chat', async (req, res) => {
           visualAnalysisEnabled: privacy.visualAnalysisEnabled,
         },
       },
-      recentHistory: recentHistory || [],
+      recentHistory: rollingHistory,
       userTasteProfile: tasteProfile,
       memories,
     });

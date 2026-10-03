@@ -13,9 +13,13 @@ export class GeminiProvider implements AIProvider {
   name = 'Google Gemini 2.5 Flash';
   private genAI: GoogleGenerativeAI | null = null;
   private apiKey: string = '';
+  private modelName: string;
+  private analysisCache = new Map<string, { data: FrameAnalysisResult; expiresAt: number }>();
+  private reactionCache = new Map<string, { data: BotReaction | null; expiresAt: number }>();
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.GEMINI_API_KEY || '';
+    this.modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
     if (key) {
       this.setApiKey(key);
     }
@@ -35,8 +39,21 @@ export class GeminiProvider implements AIProvider {
       throw new Error('Gemini API key is not configured');
     }
 
+    // Cache check: round timestamp to 15-second buckets to avoid repeated frame calls for same scene
+    const cacheKey = `${context.videoId || 'unknown'}_${context.currentScene?.sceneName || Math.floor(context.timestamp / 15)}`;
+    const cached = this.analysisCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = this.genAI.getGenerativeModel({
+        model: this.modelName,
+        generationConfig: {
+          maxOutputTokens: 350,
+          temperature: 0.3,
+        },
+      });
       const prompt = `You are VISTA, a friendly visual companion watching a video titled "${context.videoTitle}" alongside the user.
 Current timestamp: ${Math.floor(context.timestamp)} seconds.
 Scene info: ${JSON.stringify(context.currentScene || {})}
@@ -78,7 +95,13 @@ Return only JSON.`;
       const text = result.response.text();
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        const parsed = JSON.parse(jsonMatch[0]);
+        // Cache frame analysis for 10 minutes (TTL)
+        this.analysisCache.set(cacheKey, {
+          data: parsed,
+          expiresAt: Date.now() + 600_000,
+        });
+        return parsed;
       }
     } catch (err) {
       console.warn('Gemini frame analysis failed, falling back:', err);
@@ -107,9 +130,20 @@ Return only JSON.`;
     const { videoContext, isSceneChange, userReactionFrequency } = input;
     const { botPersonality } = videoContext;
 
+    // Cache check for identical scene/moment reaction
+    const cacheKey = `${videoContext.videoId || 'v'}_${videoContext.currentScene?.sceneName || Math.floor(videoContext.timestamp / 15)}_${userReactionFrequency}`;
+    const cached = this.reactionCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+
     try {
       const model = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: this.modelName,
+        generationConfig: {
+          maxOutputTokens: 180,
+          temperature: 0.6,
+        },
         systemInstruction: `You are ${botPersonality.name}, a cozy AI companion watching a video with your best friend.
 Personality: ${botPersonality.personality}.
 Tone: ${botPersonality.tone}.
@@ -139,8 +173,11 @@ Return only JSON.`;
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (!parsed.reaction && !parsed.emotion) return null;
-        return {
+        if (!parsed.reaction && !parsed.emotion) {
+          this.reactionCache.set(cacheKey, { data: null, expiresAt: Date.now() + 600_000 });
+          return null;
+        }
+        const botReaction: BotReaction = {
           id: `react_${Date.now()}`,
           emotion: parsed.emotion || 'watching',
           reactionLevel: parsed.reactionLevel || 'SUBTLE',
@@ -148,6 +185,8 @@ Return only JSON.`;
           internalThought: parsed.internalThought || 'Watching video',
           suggestedAction: parsed.suggestedAction || undefined,
         };
+        this.reactionCache.set(cacheKey, { data: botReaction, expiresAt: Date.now() + 600_000 });
+        return botReaction;
       }
     } catch (err) {
       console.warn('Gemini reaction generation failed:', err);
@@ -165,7 +204,11 @@ Return only JSON.`;
 
     try {
       const model = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: this.modelName,
+        generationConfig: {
+          maxOutputTokens: 250,
+          temperature: 0.7,
+        },
         systemInstruction: `You are ${botPersonality.name}, a visual companion watching videos alongside the user.
 Your personality is ${botPersonality.personality}.
 Tone: ${botPersonality.tone}.
@@ -176,14 +219,16 @@ Saved User Memories: ${JSON.stringify(memories || [])}
 Learned Taste Profile: ${JSON.stringify(userTasteProfile || {})}`,
       });
 
-      const conversationContext = recentHistory
+      // Token optimization: rolling conversation window of most recent 6 messages
+      const rollingHistory = (recentHistory || []).slice(-6);
+      const conversationContext = rollingHistory
         .map((h) => `${h.sender === 'user' ? 'Friend' : botPersonality.name}: ${h.text}`)
         .join('\n');
 
       const prompt = `Recent conversation:
 ${conversationContext}
 
-Friend says: "${userMessage}"
+Friend says: "${userMessage.slice(0, 1000)}"
 
 Reply in character as their friend watching the video right now.
 Keep your response conversational, concise (1-3 sentences), warm and engaging.

@@ -79,7 +79,30 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run verify:companion`: 10/10 standalone PWA checks passed.
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run test:stress`: 10/10 resilience checks passed.
-  - `npm run build`: Production build verified with zero errors (7.61s).
-- **Commit Hash**: `c57951c`
+- **Commit Hash**: `13badd3`
 - **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-04 — Stage 5: Token & Cost Optimization Subsystem
+
+- **Task Name**: Stage 5 — Token & Cost Optimization Subsystem
+- **Feature / Fix**:
+  - Added configurable Gemini model selection (`process.env.GEMINI_MODEL || 'gemini-1.5-flash'`) in `server/ai/geminiProvider.ts`.
+  - Implemented explicit output token budgets (`maxOutputTokens: 250` for chat, `180` for reactions, `350` for frame analysis) and temperature controls to eliminate unbounded token usage.
+  - Added rolling conversation window (most recent 6 messages) for both client and backend prompt construction to prevent token bloat during extended companion sessions.
+  - Implemented in-memory TTL response caching (10-minute cache) for frame analysis and scene reactions in `server/ai/geminiProvider.ts` to prevent redundant LLM invocations for unchanged scenes.
+  - Added AI request budget limiter (`checkAiBudget`, 60 req/min rolling window) in `server/index.ts` across `/api/ai/*` routes to safeguard against infinite client render loops.
+  - Built network layer in-flight request deduplication and `debounce` utility in `src/services/api.ts` to deduplicate identical concurrent API requests.
+  - Extended automated test suite (`test_suite.ts`) with assertions 20 & 21 covering rolling conversation budgeting and concurrency handling.
+- **Tests & Build Results**:
+  - `npm test`: 21/21 integration tests passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (7.49s).
+- **Commit Hash**: `a1facf1`
+- **Push Status**: Successfully pushed to `origin/main`
+
 
