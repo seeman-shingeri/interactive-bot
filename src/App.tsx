@@ -660,6 +660,22 @@ export const App: React.FC = () => {
               await api.deleteMemoryItem(id);
               loadData();
             }}
+            onUpdateMemory={async (id, partial) => {
+              await api.updateMemoryItem(id, partial);
+              loadData();
+            }}
+            onToggleMemory={async (id) => {
+              await api.toggleMemoryItem(id);
+              loadData();
+            }}
+            onConfirmMemory={async (id) => {
+              await api.confirmMemoryItem(id);
+              loadData();
+            }}
+            onAddMemory={async (payload) => {
+              await api.addMemoryItem(payload);
+              loadData();
+            }}
             onRefresh={loadData}
           />
         )}

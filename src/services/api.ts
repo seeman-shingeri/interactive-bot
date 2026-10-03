@@ -8,6 +8,9 @@ import {
   VisualObservation,
   ChatMessage,
   BotReaction,
+  TaskItem,
+  TaskType,
+  ActivityLogItem,
 } from '../types/index.js';
 
 const API_BASE = '/api';
@@ -104,6 +107,29 @@ export const api = {
     return res.json();
   },
 
+  async updateMemoryItem(id: string, partial: Partial<MemoryItem>): Promise<MemoryItem> {
+    const res = await fetch(`${API_BASE}/memory/items/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partial),
+    });
+    return res.json();
+  },
+
+  async toggleMemoryItem(id: string): Promise<MemoryItem> {
+    const res = await fetch(`${API_BASE}/memory/items/${id}/toggle`, {
+      method: 'PATCH',
+    });
+    return res.json();
+  },
+
+  async confirmMemoryItem(id: string): Promise<MemoryItem> {
+    const res = await fetch(`${API_BASE}/memory/items/${id}/confirm`, {
+      method: 'POST',
+    });
+    return res.json();
+  },
+
   async deleteAllMemory(): Promise<{ success: boolean; message: string; clearedCount: number }> {
     const res = await fetch(`${API_BASE}/memory/all`, {
       method: 'DELETE',
@@ -180,6 +206,53 @@ export const api = {
   async clearChatHistory(sessionId?: string): Promise<{ success: boolean }> {
     const url = sessionId ? `${API_BASE}/chat/history?sessionId=${sessionId}` : `${API_BASE}/chat/history`;
     const res = await fetch(url, { method: 'DELETE' });
+    return res.json();
+  },
+
+  async getTasks(): Promise<TaskItem[]> {
+    const res = await fetch(`${API_BASE}/tasks`);
+    return res.json();
+  },
+
+  async createTask(payload: {
+    title: string;
+    description?: string;
+    type?: TaskType;
+    schedule?: TaskItem['schedule'];
+  }): Promise<TaskItem> {
+    const res = await fetch(`${API_BASE}/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return res.json();
+  },
+
+  async updateTask(id: string, updates: Partial<TaskItem>): Promise<TaskItem> {
+    const res = await fetch(`${API_BASE}/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    return res.json();
+  },
+
+  async cancelTask(id: string): Promise<{ success: boolean; message?: string }> {
+    const res = await fetch(`${API_BASE}/tasks/${id}/cancel`, {
+      method: 'POST',
+    });
+    return res.json();
+  },
+
+  async retryTask(id: string): Promise<TaskItem> {
+    const res = await fetch(`${API_BASE}/tasks/${id}/retry`, {
+      method: 'POST',
+    });
+    return res.json();
+  },
+
+  async getActivities(limit: number = 50): Promise<ActivityLogItem[]> {
+    const res = await fetch(`${API_BASE}/activities?limit=${limit}`);
     return res.json();
   },
 };

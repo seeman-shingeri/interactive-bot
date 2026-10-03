@@ -13,6 +13,14 @@ import {
   History,
   X,
   CheckCircle,
+  Edit2,
+  Eye,
+  EyeOff,
+  Plus,
+  Check,
+  Shield,
+  Tag,
+  AlertTriangle,
 } from 'lucide-react';
 import { TasteProfile, TasteSignal, MemoryItem } from '../../types/index.js';
 
@@ -21,6 +29,10 @@ interface TasteProfileViewProps {
   signals: TasteSignal[];
   memories: MemoryItem[];
   onDeleteMemory: (id: string) => void;
+  onUpdateMemory?: (id: string, partial: Partial<MemoryItem>) => void;
+  onToggleMemory?: (id: string) => void;
+  onConfirmMemory?: (id: string) => void;
+  onAddMemory?: (payload: { key: string; category: MemoryItem['category']; value: string; reason: string }) => void;
   onRefresh: () => void;
 }
 
@@ -29,6 +41,10 @@ export const TasteProfileView: React.FC<TasteProfileViewProps> = ({
   signals,
   memories,
   onDeleteMemory,
+  onUpdateMemory,
+  onToggleMemory,
+  onConfirmMemory,
+  onAddMemory,
   onRefresh,
 }) => {
   const [selectedExplain, setSelectedExplain] = useState<{
@@ -37,6 +53,19 @@ export const TasteProfileView: React.FC<TasteProfileViewProps> = ({
     explanation: string;
     matchingSignals: TasteSignal[];
   } | null>(null);
+
+  // Memory inline editing state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+  const [editCategory, setEditCategory] = useState<MemoryItem['category']>('genre');
+  const [editReason, setEditReason] = useState<string>('');
+
+  // Memory addition modal state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newKey, setNewKey] = useState('');
+  const [newCategory, setNewCategory] = useState<MemoryItem['category']>('visual_style');
+  const [newValue, setNewValue] = useState('');
+  const [newReason, setNewReason] = useState('');
 
   // Helper to find signals supporting a trait
   const getExplanation = (traitName: string, score: number, type: 'genre' | 'theme' | 'visual') => {
@@ -333,60 +362,310 @@ export const TasteProfileView: React.FC<TasteProfileViewProps> = ({
         </div>
       </div>
 
-      {/* Explicit User Learned Memories List (with Delete capability) */}
+      {/* Explicit User Learned Memories List & Sovereign Memory Controls */}
       <div className="p-6 rounded-3xl bg-slate-900/70 border border-white/10 backdrop-blur-md flex flex-col space-y-4 shadow-xl">
-        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-white/10 gap-3">
           <div className="flex items-center space-x-2">
             <Sparkles className="w-5 h-5 text-purple-400" />
             <h3 className="text-base font-bold text-white tracking-wide">
-              Learned Preferences & Memory Items ({memories.length})
+              Persistent Memories & Preferences ({memories.length})
             </h3>
           </div>
-          <span className="text-xs text-slate-400">
-            You can delete any individual memory at any time
-          </span>
+          <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+            <span className="text-xs text-slate-400 hidden sm:inline">
+              Full user control: review, edit, toggle, and delete
+            </span>
+            {onAddMemory && (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs shadow-md transition-all active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Preference</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {memories.length === 0 ? (
           <p className="text-xs text-slate-500 py-6 text-center">
-            No memories saved yet. When watching videos, click "Remember" to store specific tastes!
+            No memories saved yet. Click "Add Preference" or chat with your companion to record favorite tastes!
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {memories.map((mem) => (
-              <div
-                key={mem.id}
-                className="p-4 rounded-2xl bg-slate-950/70 border border-white/10 flex items-start justify-between gap-3 group hover:border-purple-400/40 transition-all"
-              >
-                <div className="flex flex-col space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 text-[10px] uppercase font-bold tracking-wide border border-purple-500/30">
-                      {mem.category}
-                    </span>
-                    <span className="text-xs font-semibold text-white">
-                      {mem.value}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-snug">
-                    {mem.reason}
-                  </p>
-                  <span className="text-[9px] text-slate-500 font-mono">
-                    Learned on {new Date(mem.createdAt).toLocaleDateString()} • Confidence {Math.round(mem.confidence * 100)}%
-                  </span>
-                </div>
+            {memories.map((mem) => {
+              const isEditing = editingId === mem.id;
+              const sourceLabel =
+                mem.source === 'confirmed_inference'
+                  ? 'Inference'
+                  : mem.source === 'video_observation'
+                  ? 'Video'
+                  : 'Explicit';
+              const sourceColor =
+                mem.source === 'confirmed_inference'
+                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                  : mem.source === 'video_observation'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
 
-                <button
-                  onClick={() => onDeleteMemory(mem.id)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                  title="Remove this learned memory"
+              return (
+                <div
+                  key={mem.id}
+                  className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 transition-all ${
+                    mem.disabled
+                      ? 'bg-slate-950/40 border-white/5 opacity-60'
+                      : 'bg-slate-950/70 border-white/10 hover:border-purple-400/40 shadow-sm'
+                  }`}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                  {isEditing ? (
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <select
+                          value={editCategory}
+                          onChange={(e) => setEditCategory(e.target.value as any)}
+                          className="bg-slate-900 border border-white/20 rounded-lg px-2 py-1 text-xs text-white"
+                        >
+                          <option value="genre">Genre</option>
+                          <option value="theme">Theme</option>
+                          <option value="visual_style">Visual Style</option>
+                          <option value="pacing">Pacing</option>
+                          <option value="character">Character</option>
+                          <option value="dislike">Dislike</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          placeholder="Preference value"
+                          className="flex-1 bg-slate-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-cyan-400"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={editReason}
+                        onChange={(e) => setEditReason(e.target.value)}
+                        placeholder="Reason / context"
+                        className="w-full bg-slate-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-cyan-400"
+                      />
+                      <div className="flex items-center justify-end space-x-2 pt-1">
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="px-2.5 py-1 rounded-lg text-xs text-slate-400 hover:text-white"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (onUpdateMemory && editValue.trim()) {
+                              onUpdateMemory(mem.id, {
+                                value: editValue.trim(),
+                                category: editCategory,
+                                reason: editReason.trim() || mem.reason,
+                              });
+                            }
+                            setEditingId(null);
+                          }}
+                          className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Save</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[9px] uppercase font-bold tracking-wider border ${sourceColor}`}
+                          >
+                            {sourceLabel}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] uppercase font-bold tracking-wide border border-white/10">
+                            {mem.category}
+                          </span>
+                          {mem.disabled && (
+                            <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[9px] uppercase font-semibold border border-white/10">
+                              Inactive
+                            </span>
+                          )}
+                          {mem.isConfirmed === false && (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[9px] uppercase font-bold border border-amber-500/30 flex items-center space-x-1">
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              <span>Needs Confirmation</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <span
+                          className={`text-xs font-semibold text-white ${
+                            mem.disabled ? 'line-through text-slate-400' : ''
+                          }`}
+                        >
+                          {mem.value}
+                        </span>
+                        <p className="text-[11px] text-slate-400 leading-snug">{mem.reason}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                        <span className="text-[9px] text-slate-500 font-mono">
+                          {new Date(mem.createdAt).toLocaleDateString()} • {Math.round(mem.confidence * 100)}% conf
+                        </span>
+
+                        <div className="flex items-center space-x-1">
+                          {mem.isConfirmed === false && onConfirmMemory && (
+                            <button
+                              onClick={() => onConfirmMemory(mem.id)}
+                              className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold"
+                              title="Confirm this companion inference"
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>Approve</span>
+                            </button>
+                          )}
+
+                          {onToggleMemory && (
+                            <button
+                              onClick={() => onToggleMemory(mem.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-white/5 transition-colors"
+                              title={mem.disabled ? 'Enable memory' : 'Disable memory temporarily'}
+                            >
+                              {mem.disabled ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          )}
+
+                          {onUpdateMemory && (
+                            <button
+                              onClick={() => {
+                                setEditingId(mem.id);
+                                setEditValue(mem.value);
+                                setEditCategory(mem.category);
+                                setEditReason(mem.reason);
+                              }}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                              title="Edit this memory"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => onDeleteMemory(mem.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                            title="Delete this memory"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Add Custom Memory Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md p-6 rounded-3xl bg-slate-950 border border-purple-500/40 shadow-2xl flex flex-col space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center space-x-2">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+                <h3 className="text-base font-bold text-white">Add Explicit Preference</h3>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex flex-col space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Key Identifier</label>
+                <input
+                  type="text"
+                  placeholder="e.g. pref_favorite_director"
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value as any)}
+                  className="w-full bg-slate-900 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400"
+                >
+                  <option value="genre">Genre</option>
+                  <option value="theme">Theme</option>
+                  <option value="visual_style">Visual Style</option>
+                  <option value="pacing">Pacing</option>
+                  <option value="character">Character</option>
+                  <option value="dislike">Dislike</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Preference Value</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Christopher Nolan Sci-Fi"
+                  value={newValue}
+                  onChange={(e) => setNewValue(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Reason / Note</label>
+                <input
+                  type="text"
+                  placeholder="e.g. User explicitly requested companion to keep this in mind"
+                  value={newReason}
+                  onChange={(e) => setNewReason(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end space-x-2">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (onAddMemory && newKey.trim() && newValue.trim()) {
+                    onAddMemory({
+                      key: newKey.trim(),
+                      category: newCategory,
+                      value: newValue.trim(),
+                      reason: newReason.trim() || 'Explicitly saved user preference',
+                    });
+                    setNewKey('');
+                    setNewValue('');
+                    setNewReason('');
+                    setIsAddModalOpen(false);
+                  }
+                }}
+                disabled={!newKey.trim() || !newValue.trim()}
+                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition-all active:scale-95"
+              >
+                Save Preference
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* "Why Did You Learn This?" Explanation Modal (Requirement 26) */}
       {selectedExplain && (

@@ -344,13 +344,15 @@ app.post('/api/ai/chat', async (req, res) => {
   const botSettings = db.getBotSettings(userId);
   const privacy = db.getPrivacySettings(userId);
   const tasteProfile = privacy.personalMemory ? db.getTasteProfile(userId) : undefined;
-  const memories = privacy.personalMemory ? db.getMemoryItems(userId) : [];
-
   const { userMessage, videoContext, sessionId, recentHistory } = req.body;
 
   if (!userMessage) {
     return res.status(400).json({ error: 'userMessage required' });
   }
+
+  // Selective relevance retrieval: only retrieve top 4 memories relevant to query/context
+  const relevantQuery = `${userMessage} ${videoContext?.videoTitle || ''}`.trim();
+  const memories = privacy.personalMemory ? db.getRelevantMemories(userId, relevantQuery, 4) : [];
 
   // Record user message
   db.addChatMessage({
