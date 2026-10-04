@@ -4,6 +4,7 @@ import {
   CheckCircle,
   Clock,
   Play,
+  Pause,
   RotateCcw,
   Ban,
   Plus,
@@ -30,6 +31,8 @@ interface TaskCenterProps {
   }) => Promise<void>;
   onCancelTask: (taskId: string) => Promise<void>;
   onRetryTask: (taskId: string) => Promise<void>;
+  onRunTask?: (taskId: string) => Promise<void>;
+  onPauseTask?: (taskId: string) => Promise<void>;
   onRefresh: () => Promise<void>;
 }
 
@@ -39,6 +42,8 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
   onCreateTask,
   onCancelTask,
   onRetryTask,
+  onRunTask,
+  onPauseTask,
   onRefresh,
 }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -247,6 +252,34 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
                           className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium"
                         >
                           View Result
+                        </button>
+                      )}
+
+                      {task.status === 'pending' && onRunTask && (
+                        <button
+                          onClick={async () => {
+                            await onRunTask(task.id);
+                            await onRefresh();
+                          }}
+                          className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-semibold text-xs border border-emerald-500/40 transition-colors"
+                          title="Execute Task Now"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                          <span>Run</span>
+                        </button>
+                      )}
+
+                      {task.status === 'running' && onPauseTask && (
+                        <button
+                          onClick={async () => {
+                            await onPauseTask(task.id);
+                            await onRefresh();
+                          }}
+                          className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 font-semibold text-xs border border-amber-500/40 transition-colors"
+                          title="Pause Task"
+                        >
+                          <Pause className="w-3 h-3" />
+                          <span>Pause</span>
                         </button>
                       )}
 

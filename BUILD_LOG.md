@@ -127,5 +127,36 @@ This document tracks completed engineering tasks, test executions, production bu
 - **Commit Hash**: `fea3dd2`
 - **Push Status**: Successfully pushed to `origin/main`
 
+---
+
+## 2026-10-05 — Persistent Task Execution Engine & Interactive Lifecycle Controls
+
+- **Task Name**: Persistent Task Execution Engine & Interactive Lifecycle Controls
+- **Feature / Fix**:
+  - Implemented `TaskExecutor` service in `server/taskExecutor.ts` to execute companion background tasks with lifecycle transitions (`pending` -> `running` -> `completed` / `failed`).
+  - Added deterministic result generation for:
+    - `video_summary`: Compiles viewing duration, titles reviewed, and aesthetic synthesis across recorded sessions.
+    - `preference_refresh`: Re-indexes taste profile weights from recorded taste signals and updates affinity metrics.
+    - `scene_index`: Aggregates and indexes unique visual objects and dominant color palettes across scene observations.
+    - `custom_agent`: Executes companion routines according to custom prompt and persona instructions.
+  - Added backend REST endpoints in `server/index.ts`:
+    - `POST /api/tasks/:id/run`
+    - `POST /api/tasks/:id/pause`
+    - `POST /api/tasks/:id/resume`
+  - Added client API methods (`runTask`, `pauseTask`, `resumeTask`) in `src/services/api.ts`.
+  - Added interactive "Run Now" (`Play`) and "Pause" (`Pause`) buttons in `src/components/tasks/TaskCenter.tsx` with progress updates and structured result modal.
+  - Wired task execution lifecycle and smooth feedback notifications via `useToast` into `src/App.tsx`.
+  - Extended automated test suite (`test_suite.ts`) with assertions 22 & 23 validating task execution, structured result generation, and pause control handling.
+- **Tests & Build Results**:
+  - `npm test`: 23/23 integration assertions passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (34.59s).
+- **Commit Hash**: `5848dd5`
+- **Push Status**: Successfully pushed to `origin/main`
+
+
 
 

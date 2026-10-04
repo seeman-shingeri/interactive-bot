@@ -278,6 +278,22 @@ async function runTests() {
     await Promise.all([p1, p2]);
     assert(callCount === 2, '21. System verified concurrency handling for AI client calls');
 
+    // 17. Task Execution Engine Verification (Run & Pause Controls)
+    const executedTask = await fetch(`${BASE_URL}/api/tasks/${retriedTask.id}/run`, {
+      method: 'POST',
+    }).then((r) => r.json());
+    assert(
+      executedTask.status === 'completed' &&
+      executedTask.progress === 100 &&
+      executedTask.result !== null,
+      '22. Task execution engine executes task to completion with structured results'
+    );
+
+    const pausedTask = await fetch(`${BASE_URL}/api/tasks/${retriedTask.id}/pause`, {
+      method: 'POST',
+    }).then((r) => r.json());
+    assert(pausedTask && pausedTask.id === retriedTask.id, '23. Task pause endpoint handled task control');
+
     console.log(`\n=== TEST SUITE COMPLETE: ${passed} PASSED, ${failed} FAILED ===`);
   } catch (err) {
     console.error('Test suite error:', err);

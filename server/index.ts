@@ -5,6 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { db } from './db.js';
 import { providerFactory } from './ai/providerFactory.js';
+import { taskExecutor } from './taskExecutor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -520,6 +521,33 @@ app.post('/api/tasks/:id/retry', (req, res) => {
   const task = db.retryTask(userId, req.params.id);
   if (!task) {
     return res.status(400).json({ error: 'Task not found or max retries exceeded' });
+  }
+  res.json(task);
+});
+
+app.post('/api/tasks/:id/run', async (req, res) => {
+  const userId = getUserId(req);
+  const task = await taskExecutor.executeTask(userId, req.params.id);
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+  res.json(task);
+});
+
+app.post('/api/tasks/:id/pause', (req, res) => {
+  const userId = getUserId(req);
+  const task = taskExecutor.pauseTask(userId, req.params.id);
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+  res.json(task);
+});
+
+app.post('/api/tasks/:id/resume', async (req, res) => {
+  const userId = getUserId(req);
+  const task = await taskExecutor.executeTask(userId, req.params.id);
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
   }
   res.json(task);
 });

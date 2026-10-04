@@ -32,9 +32,12 @@ import { AiConfigModal } from './components/config/AiConfigModal.js';
 import { MemoryToast, MemoryToastData } from './components/common/MemoryToast.js';
 import { DownloadBotModal } from './components/companion/DownloadBotModal.js';
 import { ShortcutsModal } from './components/common/ShortcutsModal.js';
+import { useToast } from './components/common/ToastQueue.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 
 export const App: React.FC = () => {
+  const toast = useToast();
+
   // Navigation & View
   const [currentTab, setCurrentTab] = useState<NavTab>('watch');
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState<boolean>(false);
@@ -695,15 +698,53 @@ export const App: React.FC = () => {
             activities={activities}
             onCreateTask={async (params) => {
               await api.createTask(params);
-              loadData();
+              await loadData();
+              toast.addToast({
+                type: 'sparkle',
+                title: 'Task Created',
+                message: `Created "${params.title}" in pipeline.`,
+              });
             }}
             onCancelTask={async (taskId) => {
               await api.cancelTask(taskId);
-              loadData();
+              await loadData();
+              toast.addToast({
+                type: 'info',
+                title: 'Task Cancelled',
+                message: 'Task execution was stopped.',
+              });
             }}
             onRetryTask={async (taskId) => {
               await api.retryTask(taskId);
-              loadData();
+              await loadData();
+              toast.addToast({
+                type: 'info',
+                title: 'Task Retried',
+                message: 'Task reset to pending queue.',
+              });
+            }}
+            onRunTask={async (taskId) => {
+              toast.addToast({
+                type: 'info',
+                title: 'Task Executing',
+                message: 'Running companion routine...',
+              });
+              await api.runTask(taskId);
+              await loadData();
+              toast.addToast({
+                type: 'success',
+                title: 'Task Completed',
+                message: 'Task execution finished successfully.',
+              });
+            }}
+            onPauseTask={async (taskId) => {
+              await api.pauseTask(taskId);
+              await loadData();
+              toast.addToast({
+                type: 'warning',
+                title: 'Task Paused',
+                message: 'Task execution paused.',
+              });
             }}
             onRefresh={loadData}
           />

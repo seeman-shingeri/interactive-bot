@@ -274,6 +274,24 @@ export const api = {
     });
   },
 
+  async runTask(id: string): Promise<TaskItem> {
+    return fetchJson(`${API_BASE}/tasks/${id}/run`, {
+      method: 'POST',
+    });
+  },
+
+  async pauseTask(id: string): Promise<TaskItem> {
+    return fetchJson(`${API_BASE}/tasks/${id}/pause`, {
+      method: 'POST',
+    });
+  },
+
+  async resumeTask(id: string): Promise<TaskItem> {
+    return fetchJson(`${API_BASE}/tasks/${id}/resume`, {
+      method: 'POST',
+    });
+  },
+
   async getActivities(limit: number = 50): Promise<ActivityLogItem[]> {
     return fetchJson(`${API_BASE}/activities?limit=${limit}`);
   },
