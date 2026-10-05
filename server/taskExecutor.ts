@@ -111,12 +111,23 @@ export class TaskExecutor {
         };
       }
 
+      // Recurring task schedule recalculation
+      const updatedSchedule = task.schedule?.recurring
+        ? {
+            ...task.schedule,
+            nextRun: new Date(
+              Date.now() + (task.schedule.intervalMinutes || 60) * 60_000
+            ).toISOString(),
+          }
+        : task.schedule;
+
       // Mark completed
       const completedTask = db.updateTask(userId, taskId, {
         status: 'completed',
         progress: 100,
         result,
         error: null,
+        schedule: updatedSchedule,
       });
 
       db.logActivity(
@@ -125,6 +136,15 @@ export class TaskExecutor {
         'task',
         result.summary || result.message || 'Routine finished successfully'
       );
+
+      if (updatedSchedule?.recurring && updatedSchedule.nextRun) {
+        db.logActivity(
+          userId,
+          `Scheduled next iteration for: "${task.title}"`,
+          'task',
+          `Next run scheduled for ${new Date(updatedSchedule.nextRun).toLocaleTimeString()}`
+        );
+      }
 
       return completedTask;
     } catch (err: any) {
@@ -150,6 +170,50 @@ export class TaskExecutor {
     });
     db.logActivity(userId, `Paused task: "${task.title}"`, 'task', `Paused at ${task.progress}% progress`);
     return updated;
+  }
+
+  /**
+   * Evaluates due recurring tasks and triggers automated background execution.
+   */
+  async checkAndRunScheduledTasks(userId?: string): Promise<TaskRecord[]> {
+    const allTasks = userId ? db.getTasks(userId) : db.getAllTasks();
+    const now = Date.now();
+    const dueTasks = allTasks.filter(
+      (t) =>
+        t.schedule?.recurring &&
+        t.schedule.nextRun &&
+        new Date(t.schedule.nextRun).getTime() <= now &&
+        t.status !== 'running'
+    );
+
+    const executed: TaskRecord[] = [];
+    for (const task of dueTasks) {
+      const res = await this.executeTask(task.userId, task.id);
+      if (res) executed.push(res);
+    }
+    return executed;
+  }
+
+  private schedulerTimer: NodeJS.Timeout | null = null;
+
+  startScheduler(intervalMs = 60_000) {
+    if (this.schedulerTimer) return;
+    this.schedulerTimer = setInterval(() => {
+      this.checkAndRunScheduledTasks().catch((err) => {
+        console.warn('Scheduled tasks check error:', err);
+      });
+    }, intervalMs);
+  }
+
+  stopScheduler() {
+    if (this.schedulerTimer) {
+      clearInterval(this.schedulerTimer);
+      this.schedulerTimer = null;
+    }
+  }
+
+  isSchedulerRunning(): boolean {
+    return this.schedulerTimer !== null;
   }
 }
 

@@ -157,6 +157,29 @@ This document tracks completed engineering tasks, test executions, production bu
 - **Commit Hash**: `6bbdd27`
 - **Push Status**: Successfully pushed to `origin/main`
 
+---
 
+## 2026-10-06 — Recurring Task Scheduler & Automated Background Execution Engine
 
-
+- **Task Name**: Recurring Task Scheduler & Automated Background Execution Engine
+- **Feature / Fix**:
+  - Implemented automated recurring task scheduler in `server/taskExecutor.ts` to evaluate and run due background tasks without continuous client polling.
+  - Implemented automatic calculation and advancement of `schedule.nextRun` on task creation and completion (`nextRun = now + intervalMinutes * 60_000`).
+  - Added timer lifecycle controls (`startScheduler`, `stopScheduler`, `isSchedulerRunning`) in `TaskExecutor` with auto-start in non-test environments.
+  - Added REST endpoints in `server/index.ts`:
+    - `POST /api/tasks/scheduler/check`: Triggers evaluation and execution of all due recurring tasks.
+    - `GET /api/tasks/scheduler/status`: Returns scheduler running status and list of upcoming recurring tasks.
+  - Extended frontend client API (`src/services/api.ts`) with `checkScheduledTasks` and `getSchedulerStatus`.
+  - Upgraded `TaskCenter` (`src/components/tasks/TaskCenter.tsx`):
+    - Added `scheduled` filter tab to quickly view recurring companion tasks.
+    - Added visual recurring schedule badge in task cards with interval and formatted next run time.
+  - Extended automated test suite (`test_suite.ts`) with assertions 24, 25, and 26 validating recurring schedule creation, automated evaluation & nextRun advancement, and status reporting.
+- **Tests & Build Results**:
+  - `npm test`: 26/26 integration assertions passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (30.09s).
+- **Commit Hash**: `3316b3a`
+- **Push Status**: Successfully pushed to `origin/main`

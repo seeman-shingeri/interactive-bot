@@ -292,6 +292,20 @@ export const api = {
     });
   },
 
+  async checkScheduledTasks(): Promise<{ executedCount: number; executedTasks: TaskItem[] }> {
+    return fetchJson(`${API_BASE}/tasks/scheduler/check`, {
+      method: 'POST',
+    });
+  },
+
+  async getSchedulerStatus(): Promise<{
+    isRunning: boolean;
+    scheduledCount: number;
+    tasks: TaskItem[];
+  }> {
+    return fetchJson(`${API_BASE}/tasks/scheduler/status`);
+  },
+
   async getActivities(limit: number = 50): Promise<ActivityLogItem[]> {
     return fetchJson(`${API_BASE}/activities?limit=${limit}`);
   },

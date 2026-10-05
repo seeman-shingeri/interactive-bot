@@ -60,7 +60,13 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
   const pendingCount = tasks.filter((t) => t.status === 'pending').length;
   const failedCount = tasks.filter((t) => t.status === 'failed').length;
 
-  const filteredTasks = tasks.filter((t) => (filterStatus === 'all' ? true : t.status === filterStatus));
+  const filteredTasks = tasks.filter((t) =>
+    filterStatus === 'all'
+      ? true
+      : filterStatus === 'scheduled'
+      ? Boolean(t.schedule?.recurring)
+      : t.status === filterStatus
+  );
 
   const handleCreate = async () => {
     if (!title.trim()) return;
@@ -179,7 +185,7 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
             </div>
 
             <div className="flex items-center space-x-1 text-xs">
-              {['all', 'pending', 'running', 'completed', 'failed'].map((st) => (
+              {['all', 'pending', 'running', 'completed', 'failed', 'scheduled'].map((st) => (
                 <button
                   key={st}
                   onClick={() => setFilterStatus(st)}
@@ -240,10 +246,21 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
 
                   {/* Footer metadata & actions */}
                   <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-slate-400">
-                    <span className="text-[10px] font-mono">
-                      Created: {new Date(task.createdAt).toLocaleTimeString()} • Retries: {task.retries}/
-                      {task.maxRetries}
-                    </span>
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                      <span className="text-[10px] font-mono">
+                        Created: {new Date(task.createdAt).toLocaleTimeString()} • Retries: {task.retries}/
+                        {task.maxRetries}
+                      </span>
+                      {task.schedule?.recurring && (
+                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/50 text-[10px] text-cyan-300 font-mono">
+                          <Calendar className="w-2.5 h-2.5 text-cyan-400" />
+                          <span>
+                            Repeats every {task.schedule.intervalMinutes}m
+                            {task.schedule.nextRun ? ` • Next: ${new Date(task.schedule.nextRun).toLocaleTimeString()}` : ''}
+                          </span>
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex items-center space-x-2">
                       {task.result && (

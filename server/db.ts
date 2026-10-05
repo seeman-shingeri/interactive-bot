@@ -879,6 +879,10 @@ class Database {
   }
 
   // --- Tasks Subsystem ---
+  getAllTasks(): TaskRecord[] {
+    return this.data.tasks;
+  }
+
   getTasks(userId: string): TaskRecord[] {
     return this.data.tasks.filter((t) => t.userId === userId);
   }
@@ -896,6 +900,21 @@ class Database {
       schedule?: TaskRecord['schedule'];
     }
   ): TaskRecord {
+    const intervalMinutes = params.schedule?.intervalMinutes || 60;
+    const nextRun =
+      params.schedule?.nextRun ||
+      (params.schedule?.recurring
+        ? new Date(Date.now() + intervalMinutes * 60_000).toISOString()
+        : undefined);
+
+    const schedule = params.schedule
+      ? {
+          recurring: Boolean(params.schedule.recurring),
+          intervalMinutes,
+          nextRun,
+        }
+      : null;
+
     const newTask: TaskRecord = {
       id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       userId,
@@ -906,7 +925,7 @@ class Database {
       progress: 0,
       result: null,
       error: null,
-      schedule: params.schedule || null,
+      schedule,
       retries: 0,
       maxRetries: 3,
       createdAt: new Date().toISOString(),

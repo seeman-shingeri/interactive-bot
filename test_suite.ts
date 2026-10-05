@@ -294,6 +294,51 @@ async function runTests() {
     }).then((r) => r.json());
     assert(pausedTask && pausedTask.id === retriedTask.id, '23. Task pause endpoint handled task control');
 
+    // 18. Recurring Task Scheduler & Automated Background Execution Engine
+    const scheduledTask = await fetch(`${BASE_URL}/api/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Autonomous Preference Refresh Routine',
+        description: 'Periodic background synthesis of watch preferences.',
+        type: 'preference_refresh',
+        schedule: {
+          recurring: true,
+          intervalMinutes: 45,
+          nextRun: new Date(Date.now() - 1000).toISOString(),
+        },
+      }),
+    }).then((r) => r.json());
+
+    assert(
+      scheduledTask &&
+      scheduledTask.schedule?.recurring === true &&
+      scheduledTask.schedule?.intervalMinutes === 45 &&
+      Boolean(scheduledTask.schedule?.nextRun),
+      '24. Recurring task initialized with computed nextRun timestamp and interval'
+    );
+
+    const schedulerCheckRes = await fetch(`${BASE_URL}/api/tasks/scheduler/check`, {
+      method: 'POST',
+    }).then((r) => r.json());
+
+    assert(
+      schedulerCheckRes &&
+      schedulerCheckRes.executedCount >= 1 &&
+      schedulerCheckRes.executedTasks.some(
+        (t: any) => t.id === scheduledTask.id && t.status === 'completed' && new Date(t.schedule?.nextRun).getTime() > Date.now()
+      ),
+      '25. Scheduler automatically triggers due tasks, completes execution, and advances nextRun'
+    );
+
+    const schedulerStatus = await fetch(`${BASE_URL}/api/tasks/scheduler/status`).then((r) => r.json());
+    assert(
+      schedulerStatus &&
+      typeof schedulerStatus.scheduledCount === 'number' &&
+      Array.isArray(schedulerStatus.tasks),
+      '26. Scheduler diagnostic status endpoint reports recurring workload'
+    );
+
     console.log(`\n=== TEST SUITE COMPLETE: ${passed} PASSED, ${failed} FAILED ===`);
   } catch (err) {
     console.error('Test suite error:', err);

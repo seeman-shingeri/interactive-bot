@@ -552,6 +552,27 @@ app.post('/api/tasks/:id/resume', async (req, res) => {
   res.json(task);
 });
 
+// --- Scheduled Tasks Automation Routes ---
+app.post('/api/tasks/scheduler/check', async (req, res) => {
+  const userId = getUserId(req);
+  const executedTasks = await taskExecutor.checkAndRunScheduledTasks(userId);
+  res.json({
+    executedCount: executedTasks.length,
+    executedTasks,
+  });
+});
+
+app.get('/api/tasks/scheduler/status', (req, res) => {
+  const userId = getUserId(req);
+  const userTasks = db.getTasks(userId);
+  const scheduledTasks = userTasks.filter((t) => t.schedule?.recurring);
+  res.json({
+    isRunning: taskExecutor.isSchedulerRunning(),
+    scheduledCount: scheduledTasks.length,
+    tasks: scheduledTasks,
+  });
+});
+
 // --- Activity Timeline Route ---
 app.get('/api/activities', (req, res) => {
   const userId = getUserId(req);
@@ -571,9 +592,11 @@ app.get('*', (req, res, next) => {
 
 // Start Server
 if (process.env.NODE_ENV !== 'test') {
+  taskExecutor.startScheduler(60_000);
   app.listen(PORT, () => {
     console.log(`[VISTA Backend] Server listening on http://localhost:${PORT}`);
     console.log(`[VISTA Backend] Active AI Provider: ${providerFactory.getStatus().providerName}`);
+    console.log(`[VISTA Backend] Task Automation Scheduler: Active`);
   });
 }
 
