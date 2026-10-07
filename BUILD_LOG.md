@@ -284,5 +284,22 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run test:stress`: 10/10 resilience checks passed.
   - `npm run build`: Production build verified with zero errors (22.89s).
+- **Commit Hash**: `4c39264`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 6: Video Chapter Search & Jump-to-Transcript Navigation
+
+- **Task Name**: Video Chapter Search & Jump-to-Transcript Navigation
+- **Feature / Fix**:
+  - Enhanced `ChapterBookmarks.tsx` with dual-tab interface toggling between Scene Chapters and Searchable Dialogue Transcript.
+  - Added real-time dialogue keyword search across speech phrases and character/speaker names with instant highlighting.
+  - Added direct jump-to-time video seeking (`onSeekToTime`) when clicking dialogue cues or scene bookmarks.
+  - Integrated `ChapterBookmarks` component into `src/components/video/VideoPlayer.tsx` directly below the video viewport.
+- **Tests & Build Results**:
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run build`: Production build verified with zero errors (7.59s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+

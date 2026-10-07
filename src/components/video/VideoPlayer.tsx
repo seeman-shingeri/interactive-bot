@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { VideoItem, SceneMetadata, TranscriptCue, BotReaction } from '../../types/index.js';
 import { VideoFrameSampler } from './VideoFrameSampler.js';
+import { ChapterBookmarks } from './ChapterBookmarks.js';
 
 interface VideoPlayerProps {
   currentVideo: VideoItem;
@@ -440,6 +441,27 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Interactive Scene Chapters & Dialogue Transcript Navigation */}
+      <ChapterBookmarks
+        scenes={currentVideo.scenes || []}
+        activeScene={currentScene}
+        transcript={currentVideo.transcript}
+        currentTimestamp={currentTime}
+        duration={duration}
+        onSeekToScene={(scene) => {
+          if (videoRef.current) {
+            videoRef.current.currentTime = scene.startTime;
+            setCurrentTime(scene.startTime);
+          }
+        }}
+        onSeekToTime={(time) => {
+          if (videoRef.current) {
+            videoRef.current.currentTime = time;
+            setCurrentTime(time);
+          }
+        }}
+      />
 
       {/* Video Info Header & Companion Feedback Bar */}
       <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/10 backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
