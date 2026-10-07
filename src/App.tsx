@@ -757,6 +757,15 @@ export const App: React.FC = () => {
                 message: 'Task execution paused.',
               });
             }}
+            onClearActivities={async () => {
+              await api.clearActivities();
+              await loadData();
+              toast.addToast({
+                type: 'info',
+                title: 'Audit Logs Cleared',
+                message: 'Cleared all recorded activity timeline events.',
+              });
+            }}
             onRefresh={loadData}
           />
         )}

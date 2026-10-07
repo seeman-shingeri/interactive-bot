@@ -17,6 +17,8 @@ import {
   Cpu,
   ArrowRight,
   TrendingUp,
+  Trash2,
+  Search,
 } from 'lucide-react';
 import { TaskItem, TaskType, TaskStatus, ActivityLogItem } from '../../types/index.js';
 
@@ -33,6 +35,7 @@ interface TaskCenterProps {
   onRetryTask: (taskId: string) => Promise<void>;
   onRunTask?: (taskId: string) => Promise<void>;
   onPauseTask?: (taskId: string) => Promise<void>;
+  onClearActivities?: () => Promise<void>;
   onRefresh: () => Promise<void>;
 }
 
@@ -44,6 +47,7 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
   onRetryTask,
   onRunTask,
   onPauseTask,
+  onClearActivities,
   onRefresh,
 }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -54,6 +58,8 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
   const [intervalMinutes, setIntervalMinutes] = useState(60);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
+  const [activityCategoryFilter, setActivityCategoryFilter] = useState<string>('all');
+  const [activitySearch, setActivitySearch] = useState<string>('');
 
   const completedCount = tasks.filter((t) => t.status === 'completed').length;
   const runningCount = tasks.filter((t) => t.status === 'running').length;
@@ -336,36 +342,144 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
 
         {/* Right Col: Activity Timeline ("What VISTA did and why") */}
         <div className="p-6 rounded-3xl bg-slate-900/70 border border-white/10 backdrop-blur-md flex flex-col space-y-4 shadow-xl h-fit">
-          <div className="flex items-center space-x-2 pb-2 border-b border-white/10">
-            <Activity className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Activity Timeline</h3>
+          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <div className="flex items-center space-x-2">
+              <Activity className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Activity Timeline</h3>
+            </div>
+            {onClearActivities && activities.length > 0 && (
+              <button
+                onClick={async () => {
+                  if (window.confirm('Clear all recorded activity audit logs?')) {
+                    await onClearActivities();
+                    await onRefresh();
+                  }
+                }}
+                className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 text-[10px] font-semibold transition-all"
+                title="Clear Audit Logs"
+              >
+                <Trash2 className="w-3 h-3 text-rose-400" />
+                <span>Clear Logs</span>
+              </button>
+            )}
           </div>
-          <p className="text-xs text-slate-400">
+
+          <p className="text-xs text-slate-400 leading-snug">
             Chronological audit of companion actions, task executions, and decisions:
           </p>
 
+          {/* Activity Category Filter Pills */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-white/10">
+            {[
+              { id: 'all', label: 'All', count: activities.length },
+              { id: 'task', label: 'Tasks', count: activities.filter((a) => a.category === 'task').length },
+              { id: 'memory', label: 'Memory', count: activities.filter((a) => a.category === 'memory').length },
+              { id: 'vision', label: 'Vision', count: activities.filter((a) => a.category === 'vision').length },
+              { id: 'chat', label: 'Chat', count: activities.filter((a) => a.category === 'chat').length },
+              { id: 'privacy', label: 'Privacy', count: activities.filter((a) => a.category === 'privacy').length },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActivityCategoryFilter(cat.id)}
+                className={`flex-shrink-0 flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[10px] font-semibold transition-all ${
+                  activityCategoryFilter === cat.id
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                    : 'bg-slate-950/60 hover:bg-slate-800 text-slate-400 border border-white/5'
+                }`}
+              >
+                <span>{cat.label}</span>
+                <span className="text-[9px] px-1 rounded-full bg-slate-800 text-slate-300">
+                  {cat.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Activity Search Bar */}
+          <div className="relative flex items-center">
+            <Search className="w-3.5 h-3.5 absolute left-3 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={activitySearch}
+              onChange={(e) => setActivitySearch(e.target.value)}
+              placeholder="Search audit actions, details..."
+              className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-950/80 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 transition-all"
+            />
+            {activitySearch && (
+              <button
+                onClick={() => setActivitySearch('')}
+                className="absolute right-2 p-0.5 rounded text-slate-400 hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Filtered Activity List */}
           {activities.length === 0 ? (
             <p className="text-xs text-slate-500 py-4 text-center">No recorded activity yet.</p>
           ) : (
-            <div className="space-y-3 max-h-[550px] overflow-y-auto scrollbar-thin pr-1">
-              {activities.map((act) => (
-                <div
-                  key={act.id}
-                  className="p-3 rounded-2xl bg-slate-950/70 border border-white/5 flex flex-col space-y-1 text-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-white truncate max-w-[180px]">{act.action}</span>
-                    <span className="px-2 py-0.2 rounded bg-cyan-500/20 text-cyan-300 text-[9px] uppercase font-bold">
-                      {act.category}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-snug">{act.details}</p>
-                  <span className="text-[9px] text-slate-500 font-mono">
-                    {new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+            (() => {
+              const filtered = activities.filter((act) => {
+                const matchCat =
+                  activityCategoryFilter === 'all' || act.category === activityCategoryFilter;
+                const matchSearch =
+                  !activitySearch.trim() ||
+                  act.action.toLowerCase().includes(activitySearch.toLowerCase()) ||
+                  act.details.toLowerCase().includes(activitySearch.toLowerCase());
+                return matchCat && matchSearch;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <p className="text-xs text-slate-500 py-4 text-center">
+                    No activities match your current filter.
+                  </p>
+                );
+              }
+
+              return (
+                <div className="space-y-2.5 max-h-[500px] overflow-y-auto scrollbar-thin pr-1">
+                  {filtered.map((act) => {
+                    const badgeStyles: Record<string, string> = {
+                      task: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+                      memory: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+                      vision: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                      chat: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+                      privacy: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                    };
+
+                    return (
+                      <div
+                        key={act.id}
+                        className="p-3 rounded-2xl bg-slate-950/70 border border-white/5 flex flex-col space-y-1.5 text-xs transition-all hover:border-white/10"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-white truncate max-w-[180px]">
+                            {act.action}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold border ${
+                              badgeStyles[act.category] ||
+                              'bg-slate-800 text-slate-300 border-white/10'
+                            }`}
+                          >
+                            {act.category}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-snug">{act.details}</p>
+                        <span className="text-[9px] text-slate-500 font-mono">
+                          {new Date(act.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()
           )}
         </div>
       </div>

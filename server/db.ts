@@ -1015,6 +1015,13 @@ class Database {
     this.save();
     return newLog;
   }
+
+  clearActivityLogs(userId: string): number {
+    const prevCount = this.data.activityLogs.filter((a) => a.userId === userId).length;
+    this.data.activityLogs = this.data.activityLogs.filter((a) => a.userId !== userId);
+    this.save();
+    return prevCount;
+  }
 }
 
 export const db = new Database();

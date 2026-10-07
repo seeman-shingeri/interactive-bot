@@ -300,6 +300,25 @@ This document tracks completed engineering tasks, test executions, production bu
 - **Tests & Build Results**:
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run build`: Production build verified with zero errors (7.59s).
+- **Commit Hash**: `2615373`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 7: Activity Timeline Category Filters & Audit Log Cleanup
+
+- **Task Name**: Activity Timeline Category Filters & Audit Log Cleanup
+- **Feature / Fix**:
+  - Implemented `clearActivityLogs(userId)` in `server/db.ts` and `DELETE /api/activities` REST route in `server/index.ts`.
+  - Added `clearActivities()` client method in `src/services/api.ts`.
+  - Added category filter pills (`All`, `Tasks`, `Memory`, `Vision`, `Chat`, `Privacy`) with live count badges in `src/components/tasks/TaskCenter.tsx`.
+  - Added real-time text search filter across timeline actions and details.
+  - Added Clear Audit Logs action with confirmation to purge historical records.
+  - Added integration assertions 18b & 18c in `test_suite.ts`.
+- **Tests & Build Results**:
+  - `npm test`: 32/32 integration assertions passed.
+  - `npm run build`: Production build verified with zero errors (7.46s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 

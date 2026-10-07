@@ -310,6 +310,12 @@ export const api = {
     return fetchJson(`${API_BASE}/activities?limit=${limit}`);
   },
 
+  async clearActivities(): Promise<{ success: boolean; message: string }> {
+    return fetchJson(`${API_BASE}/activities`, {
+      method: 'DELETE',
+    });
+  },
+
   async exportUserData(): Promise<any> {
     return fetchJson(`${API_BASE}/user/export`);
   },

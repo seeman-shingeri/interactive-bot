@@ -703,6 +703,12 @@ app.get('/api/activities', (req, res) => {
   res.json(activities);
 });
 
+app.delete('/api/activities', (req, res) => {
+  const userId = getUserId(req);
+  const deletedCount = db.clearActivityLogs(userId);
+  res.json({ success: true, message: `Cleared ${deletedCount} activity logs.` });
+});
+
 // Serve static assets from Vite build
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));

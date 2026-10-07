@@ -262,6 +262,15 @@ async function runTests() {
     const activities = await fetch(`${BASE_URL}/api/activities`).then((r) => r.json());
     assert(Array.isArray(activities) && activities.length > 0, '18. Activity timeline recorded actions and details');
 
+    // 13b. Activity Timeline Log Clearance & Purge
+    const clearActRes = await fetch(`${BASE_URL}/api/activities`, {
+      method: 'DELETE',
+    }).then((r) => r.json());
+    assert(clearActRes && clearActRes.success === true, '18b. Activity timeline logs cleared via DELETE endpoint');
+
+    const activitiesAfterClear = await fetch(`${BASE_URL}/api/activities`).then((r) => r.json());
+    assert(Array.isArray(activitiesAfterClear) && activitiesAfterClear.length === 0, '18c. Verified activity timeline empty after clearance');
+
     // 14. Server-Side Input Validation
     const invalidTaskRes = await fetch(`${BASE_URL}/api/tasks`, {
       method: 'POST',
