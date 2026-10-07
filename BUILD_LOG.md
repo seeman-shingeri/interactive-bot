@@ -262,5 +262,27 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run test:stress`: 10/10 resilience checks passed.
   - `npm run build`: Production build verified with zero errors (6.56s).
+- **Commit Hash**: `e128337`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 5: AI Token Usage & Cache Performance Analytics Widget
+
+- **Task Name**: AI Token Usage & Cache Performance Analytics Widget
+- **Feature / Fix**:
+  - Implemented in-memory response cache and in-flight request deduplication for AI reactions in `server/index.ts`.
+  - Added real-time tracking for total model requests, cache hits, deduplicated queries, and estimated token savings (~250 tokens saved per cached scene event).
+  - Added REST endpoints: `GET /api/ai/metrics` (live performance telemetry) and `POST /api/ai/cache/clear` (cache flush).
+  - Added `getAiMetrics()` and `clearAiCache()` methods to frontend `src/services/api.ts`.
+  - Added Token & Cost Optimization Metrics Dashboard in `src/components/config/AiConfigModal.tsx` showing requests, cache hit rate %, and token savings.
+  - Added integration assertions 21b and 21c in `test_suite.ts`.
+- **Tests & Build Results**:
+  - `npm test`: 30/30 integration assertions passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (22.89s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`

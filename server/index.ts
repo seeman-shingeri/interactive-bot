@@ -285,6 +285,45 @@ const checkAiBudget = (userId: string, maxPerMinute: number = 60): boolean => {
   return true;
 };
 
+// --- AI Optimization, Caching & Metrics Tracking ---
+interface AiMetrics {
+  totalRequests: number;
+  cacheHits: number;
+  deduplicatedInFlight: number;
+  estimatedTokensSaved: number;
+}
+
+const aiMetrics: AiMetrics = {
+  totalRequests: 0,
+  cacheHits: 0,
+  deduplicatedInFlight: 0,
+  estimatedTokensSaved: 0,
+};
+
+const aiResponseCache = new Map<string, { data: any; expiry: number }>();
+const inFlightRequests = new Map<string, Promise<any>>();
+
+const getCachedAiResponse = (cacheKey: string): any | null => {
+  const cached = aiResponseCache.get(cacheKey);
+  if (cached && cached.expiry > Date.now()) {
+    aiMetrics.cacheHits++;
+    aiMetrics.estimatedTokensSaved += 250;
+    return cached.data;
+  }
+  if (cached) {
+    aiResponseCache.delete(cacheKey);
+  }
+  return null;
+};
+
+const setCachedAiResponse = (cacheKey: string, data: any, ttlMs: number = 30_000) => {
+  aiResponseCache.set(cacheKey, { data, expiry: Date.now() + ttlMs });
+  if (aiResponseCache.size > 100) {
+    const firstKey = aiResponseCache.keys().next().value;
+    if (firstKey) aiResponseCache.delete(firstKey);
+  }
+};
+
 // --- AI Visual Analysis Route ---
 app.post('/api/ai/analyze-frame', async (req, res) => {
   const userId = getUserId(req);
@@ -364,37 +403,85 @@ app.post('/api/ai/reaction', async (req, res) => {
     return res.status(429).json({ error: 'AI budget limit reached. Please wait before making more requests.' });
   }
 
+  aiMetrics.totalRequests++;
   const { videoContext, isSceneChange, recentBotComments } = req.body;
+  const cacheKey = `react_${videoContext?.videoId}_${videoContext?.timestamp}_${isSceneChange}`;
+
+  const cached = getCachedAiResponse(cacheKey);
+  if (cached) {
+    return res.json({ reaction: cached, cached: true });
+  }
+
+  const existingInFlight = inFlightRequests.get(cacheKey);
+  if (existingInFlight) {
+    aiMetrics.deduplicatedInFlight++;
+    aiMetrics.estimatedTokensSaved += 250;
+    const reaction = await existingInFlight;
+    return res.json({ reaction, deduplicated: true });
+  }
+
   const provider = providerFactory.getProvider();
+  const reactionPromise = provider.generateReaction({
+    videoContext: {
+      ...videoContext,
+      botPersonality: {
+        name: botSettings.name,
+        personality: botSettings.personality,
+        customInstructions: botSettings.customInstructions,
+        tone: botSettings.tone,
+        humorLevel: botSettings.humorLevel,
+        talkativeness: botSettings.talkativeness,
+      },
+      privacy: {
+        personalMemory: privacy.personalMemory,
+        learnVisualTaste: privacy.learnVisualTaste,
+        visualAnalysisEnabled: privacy.visualAnalysisEnabled,
+      },
+    },
+    isSceneChange: Boolean(isSceneChange),
+    userReactionFrequency: botSettings.reactionFrequency,
+    recentBotComments: recentBotComments || [],
+  });
+
+  inFlightRequests.set(cacheKey, reactionPromise);
 
   try {
-    const reaction = await provider.generateReaction({
-      videoContext: {
-        ...videoContext,
-        botPersonality: {
-          name: botSettings.name,
-          personality: botSettings.personality,
-          customInstructions: botSettings.customInstructions,
-          tone: botSettings.tone,
-          humorLevel: botSettings.humorLevel,
-          talkativeness: botSettings.talkativeness,
-        },
-        privacy: {
-          personalMemory: privacy.personalMemory,
-          learnVisualTaste: privacy.learnVisualTaste,
-          visualAnalysisEnabled: privacy.visualAnalysisEnabled,
-        },
-      },
-      isSceneChange: Boolean(isSceneChange),
-      userReactionFrequency: botSettings.reactionFrequency,
-      recentBotComments: recentBotComments || [],
-    });
-
+    const reaction = await reactionPromise;
+    setCachedAiResponse(cacheKey, reaction);
     res.json({ reaction });
   } catch (err: any) {
     console.error('Reaction generation error:', err);
     res.status(500).json({ error: err.message || 'Reaction failed' });
+  } finally {
+    inFlightRequests.delete(cacheKey);
   }
+});
+
+// --- AI Metrics & Cache Control Routes ---
+app.get('/api/ai/metrics', (req, res) => {
+  const hitRate =
+    aiMetrics.totalRequests > 0
+      ? Math.round((aiMetrics.cacheHits / aiMetrics.totalRequests) * 100)
+      : 0;
+
+  res.json({
+    totalRequests: aiMetrics.totalRequests,
+    cacheHits: aiMetrics.cacheHits,
+    hitRatePercent: hitRate,
+    deduplicatedInFlight: aiMetrics.deduplicatedInFlight,
+    estimatedTokensSaved: aiMetrics.estimatedTokensSaved,
+    activeProvider: providerFactory.getStatus().providerName,
+  });
+});
+
+app.post('/api/ai/cache/clear', (req, res) => {
+  aiResponseCache.clear();
+  inFlightRequests.clear();
+  res.json({
+    success: true,
+    message: 'AI response cache cleared successfully',
+    cacheSize: 0,
+  });
 });
 
 // --- AI Chat Route ---

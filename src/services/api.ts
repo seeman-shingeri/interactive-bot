@@ -313,4 +313,21 @@ export const api = {
   async exportUserData(): Promise<any> {
     return fetchJson(`${API_BASE}/user/export`);
   },
+
+  async getAiMetrics(): Promise<{
+    totalRequests: number;
+    cacheHits: number;
+    hitRatePercent: number;
+    deduplicatedInFlight: number;
+    estimatedTokensSaved: number;
+    activeProvider: string;
+  }> {
+    return fetchJson(`${API_BASE}/ai/metrics`);
+  },
+
+  async clearAiCache(): Promise<{ success: boolean; message: string }> {
+    return fetchJson(`${API_BASE}/ai/cache/clear`, {
+      method: 'POST',
+    });
+  },
 };

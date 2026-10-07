@@ -309,6 +309,20 @@ async function runTests() {
     await Promise.all([p1, p2]);
     assert(callCount === 2, '21. System verified concurrency handling for AI client calls');
 
+    // 16b. AI Response Caching & Metrics Tracking
+    const aiMetricsRes = await fetch(`${BASE_URL}/api/ai/metrics`).then((r) => r.json());
+    assert(
+      aiMetricsRes &&
+      typeof aiMetricsRes.totalRequests === 'number' &&
+      typeof aiMetricsRes.cacheHits === 'number',
+      '21b. AI Metrics endpoint exposes requests, cache hits, and estimated token savings'
+    );
+
+    const clearCacheRes = await fetch(`${BASE_URL}/api/ai/cache/clear`, {
+      method: 'POST',
+    }).then((r) => r.json());
+    assert(clearCacheRes && clearCacheRes.success === true, '21c. AI Cache clear endpoint flushes in-memory cache');
+
     // 17. Task Execution Engine Verification (Run & Pause Controls)
     const executedTask = await fetch(`${BASE_URL}/api/tasks/${retriedTask.id}/run`, {
       method: 'POST',

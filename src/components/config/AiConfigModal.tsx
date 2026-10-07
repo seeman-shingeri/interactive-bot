@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Cpu,
   Key,
@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   Check,
   Sparkles,
+  Zap,
+  RotateCcw,
 } from 'lucide-react';
 import { api } from '../../services/api.js';
 
@@ -26,6 +28,33 @@ export const AiConfigModal: React.FC<AiConfigModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [isClearingCache, setIsClearingCache] = useState(false);
+
+  const loadMetrics = async () => {
+    try {
+      const res = await api.getAiMetrics();
+      setMetrics(res);
+    } catch (e) {
+      console.warn('Metrics load note:', e);
+    }
+  };
+
+  useEffect(() => {
+    loadMetrics();
+  }, []);
+
+  const handleClearCache = async () => {
+    setIsClearingCache(true);
+    try {
+      await api.clearAiCache();
+      await loadMetrics();
+      setSaveMessage('AI response cache cleared successfully!');
+      setTimeout(() => setSaveMessage(null), 2500);
+    } finally {
+      setIsClearingCache(false);
+    }
+  };
 
   const handleSaveKey = async () => {
     if (!apiKeyInput.trim()) {
@@ -115,6 +144,53 @@ export const AiConfigModal: React.FC<AiConfigModalProps> = ({
           <div className="flex items-center space-x-2">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
             <span>Taste Learning Engine</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Token & Cache Optimization Metrics Dashboard */}
+      <div className="p-6 rounded-3xl bg-slate-900/70 border border-white/10 backdrop-blur-md flex flex-col space-y-4 shadow-xl">
+        <div className="flex items-center justify-between pb-2 border-b border-white/10">
+          <div className="flex items-center space-x-2">
+            <Zap className="w-5 h-5 text-amber-400" />
+            <h3 className="text-base font-bold text-white tracking-wide">
+              Token & Cost Optimization Metrics
+            </h3>
+          </div>
+          <button
+            onClick={handleClearCache}
+            disabled={isClearingCache}
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-medium transition-colors"
+            title="Clear in-memory response cache"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{isClearingCache ? 'Clearing...' : 'Clear Cache'}</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3 rounded-2xl bg-slate-950/80 border border-white/5 flex flex-col">
+            <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Requests</span>
+            <span className="text-lg font-bold text-white mt-1">{metrics?.totalRequests ?? 0}</span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-slate-950/80 border border-white/5 flex flex-col">
+            <span className="text-[10px] text-slate-400 uppercase font-semibold">Cache Hits</span>
+            <span className="text-lg font-bold text-emerald-400 mt-1">
+              {metrics?.cacheHits ?? 0} ({metrics?.hitRatePercent ?? 0}%)
+            </span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-slate-950/80 border border-white/5 flex flex-col">
+            <span className="text-[10px] text-slate-400 uppercase font-semibold">In-Flight Deduplicated</span>
+            <span className="text-lg font-bold text-cyan-400 mt-1">{metrics?.deduplicatedInFlight ?? 0}</span>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-slate-950/80 border border-white/5 flex flex-col">
+            <span className="text-[10px] text-slate-400 uppercase font-semibold">Est. Tokens Saved</span>
+            <span className="text-lg font-bold text-purple-400 mt-1">
+              ~{metrics?.estimatedTokensSaved ?? 0} tok
+            </span>
           </div>
         </div>
       </div>
