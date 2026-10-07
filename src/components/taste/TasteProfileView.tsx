@@ -21,6 +21,8 @@ import {
   Shield,
   Tag,
   AlertTriangle,
+  Search,
+  Filter,
 } from 'lucide-react';
 import { TasteProfile, TasteSignal, MemoryItem } from '../../types/index.js';
 
@@ -66,6 +68,28 @@ export const TasteProfileView: React.FC<TasteProfileViewProps> = ({
   const [newCategory, setNewCategory] = useState<MemoryItem['category']>('visual_style');
   const [newValue, setNewValue] = useState('');
   const [newReason, setNewReason] = useState('');
+
+  // Memory search & filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | MemoryItem['category']>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'unconfirmed'>('all');
+
+  const filteredMemories = memories.filter((m) => {
+    if (categoryFilter !== 'all' && m.category !== categoryFilter) return false;
+    if (statusFilter === 'active' && m.disabled) return false;
+    if (statusFilter === 'inactive' && !m.disabled) return false;
+    if (statusFilter === 'unconfirmed' && m.isConfirmed !== false) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const match =
+        m.key.toLowerCase().includes(q) ||
+        m.value.toLowerCase().includes(q) ||
+        m.reason.toLowerCase().includes(q) ||
+        m.category.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
 
   // Helper to find signals supporting a trait
   const getExplanation = (traitName: string, score: number, type: 'genre' | 'theme' | 'visual') => {
@@ -387,13 +411,106 @@ export const TasteProfileView: React.FC<TasteProfileViewProps> = ({
           </div>
         </div>
 
+        {memories.length > 0 && (
+          <div className="flex flex-col space-y-3 pb-2">
+            {/* Search input & status filter row */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search memories by keyword, value, or reason..."
+                  className="w-full bg-slate-950/80 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-400/50"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Status filter buttons */}
+              <div className="flex items-center space-x-1 text-xs">
+                {(['all', 'active', 'inactive', 'unconfirmed'] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setStatusFilter(st)}
+                    className={`px-2.5 py-1 rounded-lg capitalize text-[11px] font-medium transition-colors ${
+                      statusFilter === st
+                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/40 font-bold'
+                        : 'text-slate-400 hover:text-white bg-white/5'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-thin">
+              <span className="text-slate-500 text-[10px] uppercase font-bold pr-1 flex items-center space-x-1">
+                <Filter className="w-3 h-3" />
+                <span>Filter:</span>
+              </span>
+              {[
+                { id: 'all', label: 'All Categories' },
+                { id: 'genre', label: 'Genres' },
+                { id: 'theme', label: 'Themes' },
+                { id: 'visual_style', label: 'Visual Styles' },
+                { id: 'pacing', label: 'Pacing' },
+                { id: 'character', label: 'Characters' },
+                { id: 'dislike', label: 'Dislikes' },
+              ].map((cat) => {
+                const count =
+                  cat.id === 'all'
+                    ? memories.length
+                    : memories.filter((m) => m.category === cat.id).length;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoryFilter(cat.id as any)}
+                    className={`px-2.5 py-0.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1 ${
+                      categoryFilter === cat.id
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold'
+                        : 'text-slate-400 hover:text-slate-200 bg-white/5 border border-white/5'
+                    }`}
+                  >
+                    <span>{cat.label}</span>
+                    <span className="text-[9px] opacity-70">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {memories.length === 0 ? (
           <p className="text-xs text-slate-500 py-6 text-center">
             No memories saved yet. Click "Add Preference" or chat with your companion to record favorite tastes!
           </p>
+        ) : filteredMemories.length === 0 ? (
+          <div className="p-8 rounded-2xl bg-slate-950/40 border border-white/5 text-center text-slate-400 text-xs flex flex-col items-center justify-center space-y-2">
+            <p>No memories match your active search or category filters.</p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setCategoryFilter('all');
+                setStatusFilter('all');
+              }}
+              className="text-xs text-purple-300 hover:underline"
+            >
+              Reset Filters
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {memories.map((mem) => {
+            {filteredMemories.map((mem) => {
               const isEditing = editingId === mem.id;
               const sourceLabel =
                 mem.source === 'confirmed_inference'

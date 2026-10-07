@@ -222,5 +222,25 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run test:stress`: 10/10 resilience checks passed.
   - `npm run build`: Production build verified with zero errors (7.90s).
+- **Commit Hash**: `2fc3ec8`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 3: Memory Search, Filtering & Category Aggregates in TasteProfileView
+
+- **Task Name**: Memory Search, Filtering & Category Aggregates in TasteProfileView
+- **Feature / Fix**:
+  - Added live keyword search input with instant debounced matching across memory keys, values, categories, and explanation context in `src/components/taste/TasteProfileView.tsx`.
+  - Added category filter pills with live item count badges (`All`, `Genres`, `Themes`, `Visual Styles`, `Pacing`, `Characters`, `Dislikes`).
+  - Added state toggle filter buttons for `All`, `Active`, `Inactive`, and `Needs Confirmation`.
+  - Added empty search state with 1-click filter reset.
+- **Tests & Build Results**:
+  - `npm test`: 27/27 integration assertions passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (6.62s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
