@@ -12,6 +12,7 @@ import {
   Bot,
   User,
   Radio,
+  Edit3,
 } from 'lucide-react';
 import {
   ChatMessage,
@@ -60,6 +61,9 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
+  const [correctingMessageId, setCorrectingMessageId] = useState<string | null>(null);
+  const [correctionText, setCorrectionText] = useState('');
+  const [correctionCategory, setCorrectionCategory] = useState<MemoryItem['category']>('dislike');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom of chat
@@ -277,6 +281,80 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
                       className="px-2.5 py-0.5 rounded-md bg-purple-600 hover:bg-purple-500 text-white font-medium text-[10px] transition-colors"
                     >
                       Save to Memory
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Direct user correction trigger for bot messages */}
+              {msg.sender === 'bot' && correctingMessageId !== msg.id && (
+                <div className="mt-1.5 pt-1 border-t border-white/5 flex items-center justify-end">
+                  <button
+                    onClick={() => {
+                      setCorrectingMessageId(msg.id);
+                      setCorrectionText('');
+                    }}
+                    className="flex items-center space-x-1 text-[10px] text-slate-400 hover:text-cyan-300 transition-colors"
+                    title="Correct companion understanding and update persistent memory"
+                  >
+                    <Edit3 className="w-2.5 h-2.5 text-cyan-400" />
+                    <span>Correct understanding</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Inline user correction form */}
+              {correctingMessageId === msg.id && (
+                <div className="mt-2.5 pt-2 border-t border-cyan-500/30 bg-slate-950/80 p-2.5 rounded-xl flex flex-col space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-cyan-300 font-semibold text-[10px]">
+                    <div className="flex items-center space-x-1">
+                      <Edit3 className="w-3 h-3 text-cyan-400" />
+                      <span>Correct Understanding</span>
+                    </div>
+                    <button
+                      onClick={() => setCorrectingMessageId(null)}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={correctionText}
+                    onChange={(e) => setCorrectionText(e.target.value)}
+                    placeholder="e.g. Actually, I dislike jump scares"
+                    className="w-full bg-slate-900 border border-white/20 rounded-lg px-2 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                  />
+                  <div className="flex items-center justify-between gap-1.5">
+                    <select
+                      value={correctionCategory}
+                      onChange={(e) => setCorrectionCategory(e.target.value as any)}
+                      className="bg-slate-900 border border-white/20 rounded-md px-1.5 py-0.5 text-[10px] text-slate-300 focus:outline-none"
+                    >
+                      <option value="genre">Genre</option>
+                      <option value="theme">Theme</option>
+                      <option value="visual_style">Visual Style</option>
+                      <option value="pacing">Pacing</option>
+                      <option value="dislike">Dislike / Avoid</option>
+                    </select>
+                    <button
+                      onClick={async () => {
+                        if (!correctionText.trim()) return;
+                        onAcceptMemory({
+                          key: `user_correction_${Date.now()}`,
+                          category: correctionCategory,
+                          value: correctionText.trim(),
+                          reason: `Direct user correction on companion statement: "${msg.text.slice(0, 40)}"`,
+                        });
+                        const text = correctionText.trim();
+                        setCorrectingMessageId(null);
+                        setCorrectionText('');
+                        await onSendMessage(`Please note my correction: ${text}`);
+                      }}
+                      disabled={!correctionText.trim()}
+                      className="px-2.5 py-1 rounded-md bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold text-[10px] transition-all"
+                    >
+                      Save Correction
                     </button>
                   </div>
                 </div>

@@ -202,5 +202,25 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run test:stress`: 10/10 resilience checks passed.
   - `npm run build`: Production build verified with zero errors (37.98s).
+- **Commit Hash**: `58faa7e`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 2: In-Chat Direct Companion Correction & Fact Revision Action
+
+- **Task Name**: In-Chat Direct Companion Correction & Fact Revision Action
+- **Feature / Fix**:
+  - Implemented direct "Correct understanding" inline action on companion chat messages in `src/components/chat/CompanionChat.tsx`.
+  - Added correction modal with category selector (`genre`, `theme`, `visual_style`, `pacing`, `dislike`) and custom fact revision input.
+  - Automatically updates confirmed persistent memory (`source: 'user_explicit'`, `isConfirmed: true`, `confidence: 1.0`) and informs active conversational context.
+  - Gives users full control to rectify companion misunderstandings in real time.
+- **Tests & Build Results**:
+  - `npm test`: 27/27 integration assertions passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (7.90s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
