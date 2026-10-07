@@ -321,8 +321,8 @@ app.post('/api/ai/reaction', async (req, res) => {
   const botSettings = db.getBotSettings(userId);
   const privacy = db.getPrivacySettings(userId);
 
-  if (botSettings.reactionsPaused || !botSettings.isVisible) {
-    return res.json({ reaction: null, reason: 'Reactions are paused or bot is hidden' });
+  if (botSettings.reactionsPaused || botSettings.quietMode || !botSettings.isVisible) {
+    return res.json({ reaction: null, reason: 'Reactions are paused, quiet mode is active, or bot is hidden' });
   }
 
   if (!checkAiBudget(userId)) {

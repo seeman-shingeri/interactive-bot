@@ -33,6 +33,7 @@ export interface BotSettingsRecord {
   isLocked: boolean;
   isMuted: boolean;
   reactionsPaused: boolean;
+  quietMode?: boolean;
   voiceEnabled: boolean;
   voiceSpeed: number;
   voicePitch: number;
@@ -216,6 +217,7 @@ const defaultSchema: DatabaseSchema = {
       isLocked: false,
       isMuted: false,
       reactionsPaused: false,
+      quietMode: false,
       voiceEnabled: true,
       voiceSpeed: 1.0,
       voicePitch: 1.0,

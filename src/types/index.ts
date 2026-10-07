@@ -47,6 +47,7 @@ export interface BotSettings {
   isLocked: boolean;
   isMuted: boolean;
   reactionsPaused: boolean;
+  quietMode?: boolean;
   voiceEnabled: boolean;
   voiceSpeed: number; // 0.8 to 1.5
   voicePitch: number; // 0.8 to 1.5

@@ -14,6 +14,8 @@ import {
   Download,
   Keyboard,
   ListTodo,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { PrivacySettings, BotSettings } from '../../types/index.js';
 
@@ -30,6 +32,7 @@ interface NavbarProps {
   unreadCount?: number;
   onOpenDownloadModal?: () => void;
   onOpenShortcuts?: () => void;
+  onToggleQuietMode?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -42,6 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   isChatOpen,
   onOpenDownloadModal,
   onOpenShortcuts,
+  onToggleQuietMode,
 }) => {
   const tabs = [
     { id: 'watch' as NavTab, label: 'Watch Room', icon: <Tv className="w-4 h-4" /> },
@@ -179,6 +183,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Download className="w-4 h-4 text-cyan-400" />
             <span className="hidden sm:inline">Download Bot</span>
+          </button>
+        )}
+
+        {/* Quiet Mode Quick Toggle */}
+        {onToggleQuietMode && (
+          <button
+            onClick={onToggleQuietMode}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 shadow-sm ${
+              botSettings.quietMode
+                ? 'bg-amber-950/60 border-amber-500/50 text-amber-300 hover:bg-amber-900/60'
+                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-white/10'
+            }`}
+            title={botSettings.quietMode ? 'Quiet Mode ON: Spontaneous reactions & voice silenced' : 'Quiet Mode OFF: Normal companion reactions'}
+          >
+            {botSettings.quietMode ? (
+              <VolumeX className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+            )}
+            <span className="hidden sm:inline">{botSettings.quietMode ? 'Quiet' : 'Live'}</span>
           </button>
         )}
 

@@ -82,6 +82,27 @@ async function runTests() {
     }).then((r) => r.json());
     assert(reactionRes.reaction !== undefined, '5. Bot generated reactive scene event', reactionRes);
 
+    // 3b. Quiet Mode Suppression Verification
+    await fetch(`${BASE_URL}/api/bot-profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quietMode: true }),
+    });
+    const quietReaction = await fetch(`${BASE_URL}/api/ai/reaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        videoContext: { videoId: 'cosmic-horizons' },
+      }),
+    }).then((r) => r.json());
+    assert(quietReaction.reaction === null, '5b. Quiet mode successfully suppresses spontaneous reactions and saves tokens');
+    // Restore normal mode
+    await fetch(`${BASE_URL}/api/bot-profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quietMode: false }),
+    });
+
     // 4. Visual Frame Analysis
     const frameRes = await fetch(`${BASE_URL}/api/ai/analyze-frame`, {
       method: 'POST',

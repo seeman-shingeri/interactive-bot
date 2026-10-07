@@ -4,6 +4,7 @@ import { speechService } from '../services/speech.js';
 interface UseCompanionVoiceOptions {
   enabled: boolean;
   isMuted: boolean;
+  quietMode?: boolean;
   voiceURI?: string;
   speed?: number;
   pitch?: number;
@@ -19,7 +20,7 @@ export function useCompanionVoice(options: UseCompanionVoiceOptions) {
 
   const speak = useCallback(
     (text: string, onDone?: () => void) => {
-      if (!options.enabled || options.isMuted || !text.trim()) {
+      if (!options.enabled || options.isMuted || options.quietMode || !text.trim()) {
         onDone?.();
         return;
       }

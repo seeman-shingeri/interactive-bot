@@ -181,10 +181,20 @@ export const App: React.FC = () => {
     },
   });
 
+  const handleToggleQuietMode = async () => {
+    const nextQuiet = !botSettings.quietMode;
+    const res = await api.updateBotProfile({
+      quietMode: nextQuiet,
+      reactionsPaused: nextQuiet,
+      isMuted: nextQuiet,
+    });
+    setBotSettings(res);
+  };
+
   // Trigger companion speech via Web Speech API
   const speakReaction = useCallback(
     (text: string) => {
-      if (!botSettings.voiceEnabled || botSettings.isMuted) return;
+      if (!botSettings.voiceEnabled || botSettings.isMuted || botSettings.quietMode) return;
 
       setIsSpeaking(true);
       setCurrentEmotion('talking');
@@ -212,7 +222,7 @@ export const App: React.FC = () => {
       setActiveScene(scene);
 
       // Bot reacts to scene changes (Requirement 6)
-      if (botSettings.reactionsPaused || !botSettings.isVisible) return;
+      if (botSettings.reactionsPaused || botSettings.quietMode || !botSettings.isVisible) return;
 
       // Adapt emotion based on scene mood
       if (scene.intensity === 'funny') {
@@ -616,6 +626,7 @@ export const App: React.FC = () => {
         isChatOpen={isChatOpen}
         onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        onToggleQuietMode={handleToggleQuietMode}
       />
 
       {/* Main Content Area */}

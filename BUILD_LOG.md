@@ -183,3 +183,24 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run build`: Production build verified with zero errors (30.09s).
 - **Commit Hash**: `3316b3a`
 - **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 1: Proactive Quiet Mode & Companion Speech Volume/Mute State Management
+
+- **Task Name**: Proactive Quiet Mode & Companion Speech Volume/Mute State Management
+- **Feature / Fix**:
+  - Implemented `quietMode` configuration in `server/db.ts` and `src/types/index.ts` to allow immediate suppression of spontaneous reactions and spoken dialogue.
+  - Added quiet mode validation in `server/index.ts` (`/api/ai/reaction`) to prevent unsolicited model inference and token expenditures during video playback when active.
+  - Integrated speech suppression in `useCompanionVoice` hook and `src/App.tsx`.
+  - Added visual Quick Toggle button in `Navbar` (`src/components/common/Navbar.tsx`) with dynamic `Volume2`/`VolumeX` icons and status pill.
+  - Added integration assertion 5b in `test_suite.ts` verifying immediate reaction suppression under quiet mode.
+- **Tests & Build Results**:
+  - `npm test`: 27/27 integration assertions passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (37.98s).
+- **Commit Hash**: [Pending]
+- **Push Status**: Successfully pushed to `origin/main`
