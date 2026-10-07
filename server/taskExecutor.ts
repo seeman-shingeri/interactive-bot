@@ -148,11 +148,35 @@ export class TaskExecutor {
 
       return completedTask;
     } catch (err: any) {
+      const nextRetries = (task.retries || 0) + 1;
+      const isRecoverable = nextRetries <= (task.maxRetries || 3);
+      const backoffMinutes = Math.min(Math.pow(2, nextRetries), 60);
+      const nextRunTime = isRecoverable && task.schedule?.recurring
+        ? new Date(Date.now() + backoffMinutes * 60_000).toISOString()
+        : task.schedule?.nextRun;
+
       const failedTask = db.updateTask(userId, taskId, {
         status: 'failed',
+        retries: nextRetries,
         error: err.message || 'Execution failed',
+        schedule: task.schedule
+          ? {
+              ...task.schedule,
+              nextRun: nextRunTime,
+            }
+          : undefined,
       });
-      db.logActivity(userId, `Task failed: "${task.title}"`, 'task', err.message || 'Execution error');
+
+      db.logActivity(
+        userId,
+        `Task failed: "${task.title}"`,
+        'task',
+        `${err.message || 'Execution error'}. ${
+          isRecoverable
+            ? `Retry attempt ${nextRetries}/${task.maxRetries} backoff: ${backoffMinutes}m.`
+            : 'Max retries exhausted.'
+        }`
+      );
       return failedTask;
     }
   }

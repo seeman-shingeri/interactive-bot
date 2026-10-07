@@ -972,17 +972,29 @@ class Database {
       return null;
     }
 
+    const nextRetries = task.retries + 1;
+    const backoffMinutes = Math.min(Math.pow(2, nextRetries), 60);
+    const updatedSchedule = task.schedule
+      ? {
+          ...task.schedule,
+          nextRun: new Date(Date.now() + backoffMinutes * 60_000).toISOString(),
+        }
+      : undefined;
+
     const updated = this.updateTask(userId, taskId, {
       status: 'pending',
       progress: 0,
       error: null,
-      retries: task.retries + 1,
+      retries: nextRetries,
+      schedule: updatedSchedule,
     });
     this.logActivity(
       userId,
       `Retried task: "${task.title}"`,
       'task',
-      `Attempt ${task.retries + 1} of ${task.maxRetries}`
+      `Attempt ${nextRetries} of ${task.maxRetries}${
+        updatedSchedule?.nextRun ? ` (backoff: ${backoffMinutes}m)` : ''
+      }`
     );
     return updated;
   }

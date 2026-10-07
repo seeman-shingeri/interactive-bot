@@ -250,6 +250,38 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
                     <span className="text-[11px] font-mono text-slate-400">{task.progress}%</span>
                   </div>
 
+                  {/* Failure Diagnostics & Exponential Backoff */}
+                  {task.status === 'failed' && task.error && (
+                    <div className="p-3 rounded-2xl bg-rose-950/40 border border-rose-500/30 flex items-start space-x-2.5 text-xs animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex flex-col space-y-1 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-rose-200 text-xs">
+                            Execution Failure Diagnostics
+                          </span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono">
+                            Attempt {task.retries}/{task.maxRetries}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-rose-300/90 font-mono leading-relaxed">
+                          {task.error}
+                        </p>
+                        {task.retries < task.maxRetries ? (
+                          <div className="flex items-center space-x-1.5 text-[10px] text-amber-300/90 font-mono pt-1">
+                            <RotateCcw className="w-3 h-3 text-amber-400" />
+                            <span>
+                              Auto-recovery ready • Exponential backoff: ~{Math.min(Math.pow(2, task.retries), 60)}m delay
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-rose-400 font-mono pt-0.5">
+                            Maximum retries exhausted • Manual retry override available
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Footer metadata & actions */}
                   <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-slate-400">
                     <div className="flex items-center space-x-2 flex-wrap gap-y-1">

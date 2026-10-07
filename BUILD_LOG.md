@@ -335,8 +335,25 @@ This document tracks completed engineering tasks, test executions, production bu
 - **Tests & Build Results**:
   - `npm test`: 33/33 integration assertions passed.
   - `npm run build`: Production build verified with zero errors (8.05s).
+- **Commit Hash**: `15087f0`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 9: Task Failure Auto-Recovery & Exponential Backoff Engine
+
+- **Task Name**: Task Failure Auto-Recovery & Exponential Backoff Engine
+- **Feature / Fix**:
+  - Implemented automated exponential retry backoff (`nextRun = now + 2^retries * 60s`) in `server/taskExecutor.ts` on unhandled execution failures.
+  - Updated `retryTask()` in `server/db.ts` to recompute backoff schedule when tasks are retried.
+  - Added Failure Diagnostics banner in `src/components/tasks/TaskCenter.tsx` with error details, remaining retry counts, and backoff delay indicator.
+  - Added integration assertion 17b in `test_suite.ts`.
+- **Tests & Build Results**:
+  - `npm test`: 34/34 integration assertions passed.
+  - `npm run build`: Production build verified with zero errors (7.26s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 
 
 

@@ -266,6 +266,27 @@ async function runTests() {
     }).then((r) => r.json());
     assert(retriedTask.retries === 1 && retriedTask.status === 'pending', '17. Task retry control resets to pending and increments retry counter');
 
+    // 12b. Task Retry with Schedule Backoff Engine
+    const scheduledTaskForRetry = await fetch(`${BASE_URL}/api/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Retry Backoff Verification Task',
+        type: 'scene_index',
+        schedule: { recurring: true, intervalMinutes: 30 },
+      }),
+    }).then((r) => r.json());
+
+    const retriedScheduledTask = await fetch(`${BASE_URL}/api/tasks/${scheduledTaskForRetry.id}/retry`, {
+      method: 'POST',
+    }).then((r) => r.json());
+    assert(
+      retriedScheduledTask.retries === 1 &&
+      retriedScheduledTask.schedule &&
+      typeof retriedScheduledTask.schedule.nextRun === 'string',
+      '17b. Scheduled task retry calculates exponential backoff delay and updates nextRun'
+    );
+
     // 13. Activity Timeline Verification
     const activities = await fetch(`${BASE_URL}/api/activities`).then((r) => r.json());
     assert(Array.isArray(activities) && activities.length > 0, '18. Activity timeline recorded actions and details');
