@@ -27,6 +27,7 @@ export type ReactionLevel = 'NONE' | 'SUBTLE' | 'NORMAL' | 'STRONG';
 export type ReactionFrequency = 'Low' | 'Balanced' | 'High' | 'Custom';
 export type BotDockPosition = 'right' | 'left' | 'bottom-corner' | 'floating';
 export type DataStorageMode = 'session_only' | 'personal_memory' | 'no_storage';
+export type BotResponseStyle = 'concise' | 'balanced' | 'deep_analytical' | 'humorous';
 
 export interface BotSettings {
   name: string;
@@ -34,6 +35,7 @@ export interface BotSettings {
   personality: BotPersonalityPreset;
   customInstructions: string;
   tone: 'casual' | 'witty' | 'formal' | 'poetic' | 'hype';
+  responseStyle?: BotResponseStyle;
   reactionFrequency: ReactionFrequency;
   talkativeness: number; // 1 to 5
   humorLevel: number; // 1 to 5

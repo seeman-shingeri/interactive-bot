@@ -203,15 +203,28 @@ Return only JSON.`;
     const { botPersonality } = videoContext;
 
     try {
+      const responseStyle = botPersonality.responseStyle || 'balanced';
+      const maxTokens =
+        responseStyle === 'concise' ? 80 : responseStyle === 'deep_analytical' ? 350 : 250;
+      const styleDirective =
+        responseStyle === 'concise'
+          ? 'Response Style: Ultra-concise (1 single sentence, max 20 words, minimal tokens).'
+          : responseStyle === 'deep_analytical'
+          ? 'Response Style: Deep analytical breakdown of cinematography, lighting, and pacing.'
+          : responseStyle === 'humorous'
+          ? 'Response Style: Witty, playful, humorous banter and entertaining observation.'
+          : 'Response Style: Balanced, warm, conversational.';
+
       const model = this.genAI.getGenerativeModel({
         model: this.modelName,
         generationConfig: {
-          maxOutputTokens: 250,
-          temperature: 0.7,
+          maxOutputTokens: maxTokens,
+          temperature: responseStyle === 'concise' ? 0.3 : 0.7,
         },
         systemInstruction: `You are ${botPersonality.name}, a visual companion watching videos alongside the user.
 Your personality is ${botPersonality.personality}.
 Tone: ${botPersonality.tone}.
+${styleDirective}
 Instructions: ${botPersonality.customInstructions || 'Talk like a friend sitting on the couch watching this exact moment.'}
 Current video: "${videoContext.videoTitle}" (timestamp: ${Math.floor(videoContext.timestamp)}s).
 Current Scene: ${JSON.stringify(videoContext.currentScene || {})}

@@ -20,6 +20,7 @@ export interface BotSettingsRecord {
   personality: string;
   customInstructions: string;
   tone: 'casual' | 'witty' | 'formal' | 'poetic' | 'hype';
+  responseStyle?: 'concise' | 'balanced' | 'deep_analytical' | 'humorous';
   reactionFrequency: 'Low' | 'Balanced' | 'High' | 'Custom';
   talkativeness: number;
   humorLevel: number;
@@ -218,6 +219,7 @@ const defaultSchema: DatabaseSchema = {
       isMuted: false,
       reactionsPaused: false,
       quietMode: false,
+      responseStyle: 'balanced',
       voiceEnabled: true,
       voiceSpeed: 1.0,
       voicePitch: 1.0,

@@ -528,6 +528,7 @@ app.post('/api/ai/chat', async (req, res) => {
           personality: botSettings.personality,
           customInstructions: botSettings.customInstructions,
           tone: botSettings.tone,
+          responseStyle: botSettings.responseStyle || 'balanced',
           humorLevel: botSettings.humorLevel,
           talkativeness: botSettings.talkativeness,
         },

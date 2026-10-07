@@ -208,6 +208,18 @@ export class LocalSemanticProvider implements AIProvider {
       reply = responses[Math.floor(Math.random() * responses.length)];
     }
 
+    const responseStyle = videoContext.botPersonality?.responseStyle || 'balanced';
+    if (responseStyle === 'concise') {
+      const firstSentence = reply.split(/[.!?]/)[0];
+      if (firstSentence && firstSentence.trim()) {
+        reply = firstSentence.trim() + '.';
+      }
+    } else if (responseStyle === 'deep_analytical' && scene) {
+      reply = `${reply} Notice also how the ${scene.lighting} lighting establishes contrast against the ${scene.mood} palette.`;
+    } else if (responseStyle === 'humorous') {
+      reply = `${reply} (Though if that happened in real life, I would probably run the other way!)`;
+    }
+
     return {
       botReply: reply,
       emotion,

@@ -318,7 +318,25 @@ This document tracks completed engineering tasks, test executions, production bu
 - **Tests & Build Results**:
   - `npm test`: 32/32 integration assertions passed.
   - `npm run build`: Production build verified with zero errors (7.46s).
+- **Commit Hash**: `ca860f8`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 8: Companion Response Persona Styles & Conciseness Presets
+
+- **Task Name**: Companion Response Persona Styles & Conciseness Presets
+- **Feature / Fix**:
+  - Defined `BotResponseStyle` (`'concise' | 'balanced' | 'deep_analytical' | 'humorous'`) in `src/types/index.ts` and `server/db.ts`.
+  - Added token budgeting and response shaping in `server/ai/geminiProvider.ts` (restricting `maxOutputTokens` to 80 for `'concise'` mode to dramatically curb API costs).
+  - Added deterministic fallback shaping in `server/ai/localProvider.ts` for each persona style.
+  - Added Response Persona Style selector card with description badges in `src/components/studio/BotStudio.tsx`.
+  - Added integration assertion 4c in `test_suite.ts`.
+- **Tests & Build Results**:
+  - `npm test`: 33/33 integration assertions passed.
+  - `npm run build`: Production build verified with zero errors (8.05s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 
 

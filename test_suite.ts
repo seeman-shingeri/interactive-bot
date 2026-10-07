@@ -59,6 +59,14 @@ async function runTests() {
     }).then((r) => r.json());
     assert(updateBot.personality === 'Curious' && updateBot.humorLevel === 4, '4. Bot personality updated to Curious');
 
+    // 2c. Response Style Configuration
+    const styleBot = await fetch(`${BASE_URL}/api/bot-profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ responseStyle: 'concise' }),
+    }).then((r) => r.json());
+    assert(styleBot.responseStyle === 'concise', '4c. Companion response style configured to ultra-concise mode');
+
     // 3. Scene Reaction Engine
     const reactionRes = await fetch(`${BASE_URL}/api/ai/reaction`, {
       method: 'POST',

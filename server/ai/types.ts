@@ -21,6 +21,7 @@ export interface VideoFrameContext {
     personality: string;
     customInstructions?: string;
     tone: string;
+    responseStyle?: 'concise' | 'balanced' | 'deep_analytical' | 'humorous';
     humorLevel: number;
     talkativeness: number;
   };

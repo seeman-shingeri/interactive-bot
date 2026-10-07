@@ -13,8 +13,9 @@ import {
   Shield,
   Layers,
   Download,
+  Feather,
 } from 'lucide-react';
-import { BotSettings, BotPersonalityPreset } from '../../types/index.js';
+import { BotSettings, BotPersonalityPreset, BotResponseStyle } from '../../types/index.js';
 import { speechService } from '../../services/speech.js';
 
 interface BotStudioProps {
@@ -69,6 +70,38 @@ export const BotStudio: React.FC<BotStudioProps> = ({
     { id: 'gold', name: 'Solar Amber', hex: '#ffd166' },
     { id: 'emerald', name: 'Matrix Emerald', hex: '#06d6a0' },
     { id: 'rose', name: 'Cyber Rose', hex: '#f72585' },
+  ];
+
+  const responseStyles: {
+    id: BotResponseStyle;
+    label: string;
+    badge: string;
+    desc: string;
+  }[] = [
+    {
+      id: 'concise',
+      label: 'Ultra-Concise',
+      badge: 'Lowest Tokens',
+      desc: '1 single sentence maximum. Crisp, punchy, zero fluff, strictly token budgeted.',
+    },
+    {
+      id: 'balanced',
+      label: 'Balanced',
+      badge: 'Default',
+      desc: 'Natural, warm, conversational dialogue with moderate context.',
+    },
+    {
+      id: 'deep_analytical',
+      label: 'Deep Analytical',
+      badge: 'Rich Detail',
+      desc: 'In-depth critique of cinematography, scene pacing, and thematic elements.',
+    },
+    {
+      id: 'humorous',
+      label: 'Witty & Comedic',
+      badge: 'Playful',
+      desc: 'Light sarcasm, humorous banter, and entertaining reaction comments.',
+    },
   ];
 
   return (
@@ -317,6 +350,54 @@ export const BotStudio: React.FC<BotStudioProps> = ({
                 placeholder="e.g. You are curious, funny and slightly sarcastic. Don't talk too much. React mainly to interesting scenes."
                 className="w-full p-3 rounded-xl bg-slate-950 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 leading-relaxed"
               />
+            </div>
+          </div>
+
+          {/* Response Style & Output Token Budgeting */}
+          <div className="p-6 rounded-3xl bg-slate-900/70 border border-white/10 backdrop-blur-md flex flex-col space-y-4 shadow-xl">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="flex items-center space-x-2">
+                <Feather className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold text-white tracking-wide">
+                  Response Style & Token Budgeting
+                </h3>
+              </div>
+              <span className="text-xs text-slate-400">Runtime Optimization</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-snug">
+              Select how {form.name} crafts replies during video chat. Concise mode enforces strict token limits to save compute.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {responseStyles.map((style) => {
+                const isSelected = (form.responseStyle || 'balanced') === style.id;
+                return (
+                  <button
+                    key={style.id}
+                    type="button"
+                    onClick={() => handleChange('responseStyle', style.id)}
+                    className={`p-3.5 rounded-2xl border text-left flex flex-col space-y-1.5 transition-all ${
+                      isSelected
+                        ? 'bg-emerald-950/40 border-emerald-400/80 shadow-md shadow-emerald-500/20'
+                        : 'bg-slate-950/60 border-white/5 hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white">{style.label}</span>
+                      <span
+                        className={`text-[9px] px-2 py-0.5 rounded-full font-semibold border ${
+                          isSelected
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                            : 'bg-slate-800 text-slate-400 border-white/5'
+                        }`}
+                      >
+                        {style.badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-snug">{style.desc}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
