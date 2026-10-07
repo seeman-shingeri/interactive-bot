@@ -211,6 +211,41 @@ app.delete('/api/memory/all', (req, res) => {
   });
 });
 
+// --- Export User Data Archive (GDPR / Data Sovereignty) ---
+app.get('/api/user/export', (req, res) => {
+  const userId = getUserId(req);
+  const botSettings = db.getBotSettings(userId);
+  const privacySettings = db.getPrivacySettings(userId);
+  const tasteProfile = db.getTasteProfile(userId);
+  const tasteSignals = db.getTasteSignals(userId);
+  const memories = db.getMemoryItems(userId);
+  const viewingHistory = db.getViewingHistory(userId);
+  const observations = db.getRecentObservations(userId);
+  const tasks = db.getTasks(userId);
+  const activities = db.getActivityLogs(userId, 200);
+
+  db.logActivity(userId, 'Exported complete personal data archive', 'privacy', 'Exported GDPR compliant JSON archive');
+
+  res.json({
+    exportVersion: '1.0',
+    exportTimestamp: new Date().toISOString(),
+    userId,
+    profile: {
+      botSettings,
+      privacySettings,
+      tasteProfile,
+    },
+    data: {
+      tasteSignals,
+      memories,
+      viewingHistory,
+      observations,
+      tasks,
+      activities,
+    },
+  });
+});
+
 // --- Viewing History Routes ---
 app.get('/api/history', (req, res) => {
   const userId = getUserId(req);

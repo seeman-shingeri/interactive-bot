@@ -223,6 +223,16 @@ async function runTests() {
     }).then((r) => r.json());
     assert(delMem.success === true, '13. Individual memory item deleted successfully');
 
+    // 11b. User Data Export (GDPR / Data Sovereignty)
+    const exportRes = await fetch(`${BASE_URL}/api/user/export`).then((r) => r.json());
+    assert(
+      exportRes &&
+      exportRes.exportVersion === '1.0' &&
+      exportRes.data &&
+      Array.isArray(exportRes.data.memories),
+      '13b. User data archive exported with full GDPR provenance'
+    );
+
     // 12. Persistent Task Subsystem Verification
     const createdTask = await fetch(`${BASE_URL}/api/tasks`, {
       method: 'POST',

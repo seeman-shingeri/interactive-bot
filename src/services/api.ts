@@ -309,4 +309,8 @@ export const api = {
   async getActivities(limit: number = 50): Promise<ActivityLogItem[]> {
     return fetchJson(`${API_BASE}/activities?limit=${limit}`);
   },
+
+  async exportUserData(): Promise<any> {
+    return fetchJson(`${API_BASE}/user/export`);
+  },
 };

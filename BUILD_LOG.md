@@ -242,5 +242,25 @@ This document tracks completed engineering tasks, test executions, production bu
   - `npm run test:e2e`: 5/5 flow verifications passed.
   - `npm run test:stress`: 10/10 resilience checks passed.
   - `npm run build`: Production build verified with zero errors (6.62s).
+- **Commit Hash**: `a1dc393`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-07 — Contribution 4: User Data Export & Portability (GDPR/Data Sovereignty)
+
+- **Task Name**: User Data Export & Portability (GDPR/Data Sovereignty)
+- **Feature / Fix**:
+  - Implemented `GET /api/user/export` endpoint in `server/index.ts` packaging the complete user profile, taste profile, memories, viewing sessions, observations, tasks, and audit logs.
+  - Added `exportUserData()` client service method in `src/services/api.ts`.
+  - Added Data Portability & GDPR Archive card in `src/components/memory/PrivacyMemoryCenter.tsx` with instant 1-click JSON file download.
+  - Added integration assertion 13b in `test_suite.ts` validating data completeness, JSON schema structure, and provenance records.
+- **Tests & Build Results**:
+  - `npm test`: 28/28 integration assertions passed.
+  - `npm run test:unit`: 8/8 unit checks passed.
+  - `npm run verify:companion`: 10/10 standalone PWA checks passed.
+  - `npm run test:e2e`: 5/5 flow verifications passed.
+  - `npm run test:stress`: 10/10 resilience checks passed.
+  - `npm run build`: Production build verified with zero errors (6.56s).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`

@@ -13,8 +13,10 @@ import {
   Camera,
   Layers,
   Info,
+  Download,
 } from 'lucide-react';
 import { PrivacySettings } from '../../types/index.js';
+import { api } from '../../services/api.js';
 
 interface PrivacyMemoryCenterProps {
   privacySettings: PrivacySettings;
@@ -31,7 +33,33 @@ export const PrivacyMemoryCenter: React.FC<PrivacyMemoryCenterProps> = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleExportData = async () => {
+    try {
+      setIsExporting(true);
+      const data = await api.exportUserData();
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `vista_personal_archive_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setToastMessage('Personal data archive exported successfully!');
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err) {
+      console.error('Export error:', err);
+      setToastMessage('Failed to export personal data archive.');
+      setTimeout(() => setToastMessage(null), 3000);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleToggle = async (key: keyof PrivacySettings, value: any) => {
     await onUpdatePrivacy({ [key]: value });
@@ -342,6 +370,29 @@ export const PrivacyMemoryCenter: React.FC<PrivacyMemoryCenterProps> = ({
             />
           </div>
         </div>
+      </div>
+
+      {/* Data Portability & GDPR Archive */}
+      <div className="p-6 rounded-3xl bg-slate-900/70 border border-white/10 backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+        <div className="flex flex-col space-y-1">
+          <div className="flex items-center space-x-2 text-cyan-400 font-bold text-sm">
+            <Download className="w-5 h-5" />
+            <span>Data Portability: Export Personal Archive</span>
+          </div>
+          <p className="text-xs text-slate-400 max-w-xl">
+            Download your full profile, taste preferences, memory entries, video observation history,
+            and task activity in an open, GDPR-compliant JSON archive.
+          </p>
+        </div>
+
+        <button
+          onClick={handleExportData}
+          disabled={isExporting}
+          className="flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-cyan-600/30 transition-all active:scale-95 whitespace-nowrap"
+        >
+          <Download className="w-4 h-4" />
+          <span>{isExporting ? 'Exporting...' : 'Export Personal Archive'}</span>
+        </button>
       </div>
 
       {/* Delete All Memory Button & Danger Zone (Requirement 12) */}
