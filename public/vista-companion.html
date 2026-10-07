@@ -241,11 +241,25 @@
       </div>
 
       <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-2">
-        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Voice Responses</h4>
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Voice Responses & Quiet Mode</h4>
         <div class="flex items-center justify-between text-xs">
           <span>Enable Web Speech TTS</span>
           <input id="tts-toggle" type="checkbox" checked class="w-4 h-4 accent-cyan-500 rounded">
         </div>
+        <div class="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+          <span>Quiet Mode (Suppress Proactive Talk)</span>
+          <input id="quiet-toggle" type="checkbox" class="w-4 h-4 accent-cyan-500 rounded">
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-2">
+        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Response Style & Token Budget</h4>
+        <select id="response-style-select" class="w-full p-2.5 rounded-xl bg-slate-950 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-400">
+          <option value="balanced" selected>Balanced (Standard Dialog)</option>
+          <option value="concise">Ultra-Concise (Lowest Tokens)</option>
+          <option value="deep_analytical">Deep Analytical (Rich Breakdown)</option>
+          <option value="humorous">Witty & Comedic (Playful)</option>
+        </select>
       </div>
     </div>
 
