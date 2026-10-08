@@ -597,6 +597,17 @@ app.post('/api/tasks', (req, res) => {
     return res.status(400).json({ error: 'Valid task title required' });
   }
 
+  if (title.trim().length > 120) {
+    return res.status(400).json({ error: 'Task title cannot exceed 120 characters' });
+  }
+
+  if (schedule?.recurring) {
+    const mins = Number(schedule.intervalMinutes);
+    if (!Number.isFinite(mins) || mins < 5 || mins > 10080) {
+      return res.status(400).json({ error: 'Recurring interval must be between 5 and 10080 minutes (1 week)' });
+    }
+  }
+
   const validTypes = ['video_summary', 'preference_refresh', 'scene_index', 'custom_agent'];
   if (type && !validTypes.includes(type)) {
     return res.status(400).json({ error: `Invalid task type. Must be one of: ${validTypes.join(', ')}` });

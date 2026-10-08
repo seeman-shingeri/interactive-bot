@@ -405,8 +405,24 @@ This document tracks completed engineering tasks, test executions, production bu
   - Added "Browse Channels" action opening the source playlist drawer directly from the error state.
 - **Tests & Build Results**:
   - `npx tsc --noEmit`: 0 errors.
+- **Commit Hash**: `f3af1ee`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-08 — Sprint Task 3: Task Title Bounds and Interval Schedule Validation
+
+- **Task Name**: Sprint Task 3 — Task Title Bounds and Interval Schedule Validation
+- **Feature / Fix**:
+  - Added strict server validation in `POST /api/tasks` enforcing maximum 120 character task title limit.
+  - Enforced recurring interval bounds between 5 minutes and 10,080 minutes (1 week) with HTTP 400 rejection for invalid values.
+  - Added frontend character count and input constraints (`maxLength={120}`, `min={5}`, `max={10080}`) in `src/components/tasks/TaskCenter.tsx`.
+  - Added integration assertion 19b in `test_suite.ts`.
+- **Tests & Build Results**:
+  - `npm test`: 35/35 integration assertions passed.
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 
 
 

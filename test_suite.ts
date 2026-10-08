@@ -308,6 +308,17 @@ async function runTests() {
     });
     assert(invalidTaskRes.status === 400, '19. Server rejects invalid task payload with HTTP 400');
 
+    // 14b. Server-Side Interval Bounds Validation
+    const invalidIntervalRes = await fetch(`${BASE_URL}/api/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Task With Invalid Interval',
+        schedule: { recurring: true, intervalMinutes: 2 },
+      }),
+    });
+    assert(invalidIntervalRes.status === 400, '19b. Server rejects task with sub-5-minute interval with HTTP 400');
+
     // 15. Token Optimization: Rolling Conversation & Memory Retrieval in Chat
     const rollingChatRes = await fetch(`${BASE_URL}/api/ai/chat`, {
       method: 'POST',

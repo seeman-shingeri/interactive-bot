@@ -76,11 +76,12 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
 
   const handleCreate = async () => {
     if (!title.trim()) return;
+    const safeInterval = Math.max(5, Math.min(10080, intervalMinutes));
     await onCreateTask({
-      title: title.trim(),
+      title: title.trim().slice(0, 120),
       description: description.trim(),
       type: taskType,
-      schedule: isRecurring ? { recurring: true, intervalMinutes } : null,
+      schedule: isRecurring ? { recurring: true, intervalMinutes: safeInterval } : null,
     });
     setTitle('');
     setDescription('');
@@ -535,9 +536,15 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
 
             <div className="flex flex-col space-y-3">
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Task Title</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-300">Task Title</label>
+                  <span className={`text-[10px] font-mono ${title.length >= 110 ? 'text-amber-400' : 'text-slate-500'}`}>
+                    {title.length}/120
+                  </span>
+                </div>
                 <input
                   type="text"
+                  maxLength={120}
                   placeholder="e.g. Generate Weekly Viewing Digest"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -549,6 +556,7 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
                 <label className="text-xs font-semibold text-slate-300 block mb-1">Description / Goal</label>
                 <textarea
                   rows={2}
+                  maxLength={500}
                   placeholder="e.g. Summarize watched scenes and update aesthetic preference clusters"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -585,12 +593,16 @@ export const TaskCenter: React.FC<TaskCenterProps> = ({
 
               {isRecurring && (
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">
-                    Interval (Minutes)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-300">
+                      Interval (Minutes)
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-mono">Min 5m • Max 10,080m</span>
+                  </div>
                   <input
                     type="number"
-                    min={15}
+                    min={5}
+                    max={10080}
                     value={intervalMinutes}
                     onChange={(e) => setIntervalMinutes(parseInt(e.target.value, 10) || 60)}
                     className="w-full bg-slate-900 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"
