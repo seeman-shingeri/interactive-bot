@@ -14,51 +14,86 @@ const STORAGE_KEYS = {
 
 class LocalStorageService {
   private isAvailable(): boolean {
-    return typeof window !== 'undefined' && 'localStorage' in window;
+    if (typeof window === 'undefined') return false;
+    try {
+      const testKey = '__vista_storage_test__';
+      window.localStorage.setItem(testKey, '1');
+      window.localStorage.removeItem(testKey);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private safeParse<T>(data: string | null): T | null {
+    if (!data) return null;
+    try {
+      return JSON.parse(data) as T;
+    } catch (err) {
+      console.warn('LocalStorage JSON parse failed:', err);
+      return null;
+    }
+  }
+
+  private safeSetItem(key: string, value: string): void {
+    if (!this.isAvailable()) return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (err: any) {
+      if (err?.name === 'QuotaExceededError' || err?.code === 22) {
+        console.warn('LocalStorage quota exceeded. Evicting non-critical cache...');
+        try {
+          window.localStorage.removeItem(STORAGE_KEYS.OFFLINE_CHAT_HISTORY);
+          window.localStorage.setItem(key, value);
+          return;
+        } catch (retryErr) {
+          console.warn('LocalStorage retry failed after eviction:', retryErr);
+        }
+      }
+      console.warn(`LocalStorage write failed for key "${key}":`, err);
+    }
   }
 
   public saveBotSettings(settings: BotSettings): void {
-    if (!this.isAvailable()) return;
-    try {
-      localStorage.setItem(STORAGE_KEYS.BOT_SETTINGS, JSON.stringify(settings));
-    } catch (err) {
-      console.warn('LocalStorage save failed:', err);
-    }
+    this.safeSetItem(STORAGE_KEYS.BOT_SETTINGS, JSON.stringify(settings));
   }
 
   public getBotSettings(): Partial<BotSettings> | null {
     if (!this.isAvailable()) return null;
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.BOT_SETTINGS);
-      return data ? JSON.parse(data) : null;
-    } catch {
-      return null;
-    }
+    return this.safeParse<Partial<BotSettings>>(window.localStorage.getItem(STORAGE_KEYS.BOT_SETTINGS));
   }
 
   public savePrivacySettings(settings: PrivacySettings): void {
-    if (!this.isAvailable()) return;
-    try {
-      localStorage.setItem(STORAGE_KEYS.PRIVACY_SETTINGS, JSON.stringify(settings));
-    } catch (err) {
-      console.warn('LocalStorage save failed:', err);
-    }
+    this.safeSetItem(STORAGE_KEYS.PRIVACY_SETTINGS, JSON.stringify(settings));
   }
 
   public getPrivacySettings(): Partial<PrivacySettings> | null {
     if (!this.isAvailable()) return null;
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.PRIVACY_SETTINGS);
-      return data ? JSON.parse(data) : null;
-    } catch {
-      return null;
-    }
+    return this.safeParse<Partial<PrivacySettings>>(window.localStorage.getItem(STORAGE_KEYS.PRIVACY_SETTINGS));
+  }
+
+  public saveLastVideoId(videoId: string): void {
+    this.safeSetItem(STORAGE_KEYS.LAST_VIDEO_ID, videoId);
+  }
+
+  public getLastVideoId(): string | null {
+    if (!this.isAvailable()) return null;
+    return window.localStorage.getItem(STORAGE_KEYS.LAST_VIDEO_ID);
+  }
+
+  public saveOfflineChatHistory(messages: any[]): void {
+    this.safeSetItem(STORAGE_KEYS.OFFLINE_CHAT_HISTORY, JSON.stringify(messages.slice(-20)));
+  }
+
+  public getOfflineChatHistory(): any[] | null {
+    if (!this.isAvailable()) return null;
+    return this.safeParse<any[]>(window.localStorage.getItem(STORAGE_KEYS.OFFLINE_CHAT_HISTORY));
   }
 
   public clearAllCache(): void {
     if (!this.isAvailable()) return;
     try {
-      Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+      Object.values(STORAGE_KEYS).forEach((key) => window.localStorage.removeItem(key));
     } catch (err) {
       console.warn('LocalStorage clear failed:', err);
     }
