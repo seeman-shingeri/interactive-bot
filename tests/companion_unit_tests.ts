@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { hexToRgba, calculateLuminance, getDominantMoodColor, getAmbilightBoxShadow } from '../src/utils/color.js';
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -62,6 +63,33 @@ async function runUnitTests() {
     microphoneEnabled: false,
   };
   assert(defaultPrivacy.microphoneEnabled === false, 'Microphone is safely disabled by default for privacy');
+
+  // Test 5: Hex to RGBA parsing and alpha clamping
+  const rgbaRed = hexToRgba('#ff0000', 0.5);
+  assert(rgbaRed === 'rgba(255, 0, 0, 0.5)', 'hexToRgba correctly parses 6-digit hex with 0.5 alpha');
+
+  const rgbaShortHex = hexToRgba('#fff', 1);
+  assert(rgbaShortHex === 'rgba(255, 255, 255, 1)', 'hexToRgba expands 3-digit short hex (#fff -> #ffffff)');
+
+  const rgbaClamped = hexToRgba('#00ff00', 1.5);
+  assert(rgbaClamped === 'rgba(0, 255, 0, 1)', 'hexToRgba clamps alpha over 1.0 down to 1.0');
+
+  // Test 6: Luminance calculations
+  const lumWhite = calculateLuminance(255, 255, 255);
+  assert(Math.abs(lumWhite - 1.0) < 0.001, 'calculateLuminance for pure white (255, 255, 255) is 1.0');
+
+  const lumBlack = calculateLuminance(0, 0, 0);
+  assert(lumBlack === 0, 'calculateLuminance for pure black (0, 0, 0) is 0.0');
+
+  // Test 7: Dominant mood color matching by content genres
+  assert(getDominantMoodColor(['Sci-Fi']) === '#00d2ff', 'Dominant mood for Sci-Fi is cyan (#00d2ff)');
+  assert(getDominantMoodColor(['Action']) === '#f72585', 'Dominant mood for Action is magenta (#f72585)');
+  assert(getDominantMoodColor(['Nature']) === '#06d6a0', 'Dominant mood for Nature is emerald (#06d6a0)');
+  assert(getDominantMoodColor(['UnknownGenre']) === '#9d4edd', 'Dominant mood fallback is violet (#9d4edd)');
+
+  // Test 8: Ambilight box-shadow CSS rule generation
+  const shadow = getAmbilightBoxShadow('#00d2ff', 0.25);
+  assert(shadow.includes('rgba(0, 210, 255, 0.25)'), 'getAmbilightBoxShadow formats valid CSS shadow with rgba');
 
   console.log('\n🎉 All Companion Unit Tests Passed Successfully!\n');
 }

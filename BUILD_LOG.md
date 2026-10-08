@@ -476,8 +476,26 @@ This document tracks completed engineering tasks, test executions, production bu
   - Added accessible `aria-label="Dismiss notification"` and keyboard focus styling to dismiss button.
 - **Tests & Build Results**:
   - `npm run typecheck`: Passed (exit code 0, 0 errors).
+- **Commit Hash**: `87bca73`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-08 — Sprint Task 8: Unit Test Expansion for Color and Lighting Utilities
+
+- **Task Name**: Sprint Task 8 — Unit Test Expansion for Color and Lighting Utilities
+- **Feature / Fix**:
+  - Expanded `tests/companion_unit_tests.ts` to validate:
+    - `hexToRgba`: 6-digit hex parsing, 3-digit shorthand expansion, and alpha clamping bounds.
+    - `calculateLuminance`: standard ITU-R BT.601 perceptual luminance formula against boundary extremes.
+    - `getDominantMoodColor`: categorical mood hue mappings by playlist content genres and fallback.
+    - `getAmbilightBoxShadow`: valid CSS box-shadow generation with dynamic alpha.
+- **Tests & Build Results**:
+  - `npm run test:unit`: 18/18 assertions passed.
+  - `npm run typecheck`: Passed (exit code 0, 0 errors).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 
 
 
