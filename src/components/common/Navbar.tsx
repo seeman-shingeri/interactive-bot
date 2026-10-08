@@ -60,7 +60,19 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 w-full bg-[#07090e]/85 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3 flex items-center justify-between">
       {/* Brand Logo & Companion Name */}
-      <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onTabChange('watch')}>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="VISTA Home - Watch Room"
+        className="flex items-center space-x-3 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-2xl"
+        onClick={() => onTabChange('watch')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onTabChange('watch');
+          }
+        }}
+      >
         <div className="relative w-9 h-9 rounded-2xl bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
           <div className="w-4 h-4 rounded-full bg-slate-950 flex items-center justify-center">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
@@ -82,12 +94,19 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Center Navigation Tabs */}
-      <nav className="hidden md:flex items-center space-x-1 bg-slate-900/60 p-1 rounded-2xl border border-white/5">
+      <nav
+        role="tablist"
+        aria-label="Main Navigation"
+        className="hidden md:flex items-center space-x-1 bg-slate-900/60 p-1 rounded-2xl border border-white/5"
+      >
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={currentTab === tab.id}
+            aria-label={tab.label}
             onClick={() => onTabChange(tab.id)}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
               currentTab === tab.id
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm shadow-cyan-500/20'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -152,8 +171,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex md:hidden">
           <select
             value={currentTab}
+            aria-label="Select Navigation Section"
             onChange={(e) => onTabChange(e.target.value as NavTab)}
-            className="px-2 py-1 rounded-xl bg-slate-900 border border-white/10 text-xs text-white"
+            className="px-2 py-1 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           >
             {tabs.map((t) => (
               <option key={t.id} value={t.id}>
@@ -167,7 +187,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         {onOpenShortcuts && (
           <button
             onClick={onOpenShortcuts}
-            className="p-1.5 rounded-xl border border-white/10 hover:border-cyan-400/40 text-slate-400 hover:text-cyan-300 bg-slate-900 transition-all active:scale-95"
+            aria-label="View Keyboard Shortcuts Cheatsheet"
+            className="p-1.5 rounded-xl border border-white/10 hover:border-cyan-400/40 text-slate-400 hover:text-cyan-300 bg-slate-900 transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             title="Keyboard Shortcuts Cheatsheet"
           >
             <Keyboard className="w-4 h-4" />
@@ -178,7 +199,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         {onOpenDownloadModal && (
           <button
             onClick={onOpenDownloadModal}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 border-cyan-500/30 hover:border-cyan-400 hover:text-white transition-all active:scale-95 shadow-sm"
+            aria-label="Download Standalone Companion Bot"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 border-cyan-500/30 hover:border-cyan-400 hover:text-white transition-all active:scale-95 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             title="Download Standalone Companion Bot"
           >
             <Download className="w-4 h-4 text-cyan-400" />
@@ -190,7 +212,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         {onToggleQuietMode && (
           <button
             onClick={onToggleQuietMode}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 shadow-sm ${
+            aria-label={botSettings.quietMode ? 'Disable Quiet Mode (allow proactive companion speech)' : 'Enable Quiet Mode (silence proactive speech)'}
+            aria-pressed={Boolean(botSettings.quietMode)}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
               botSettings.quietMode
                 ? 'bg-amber-950/60 border-amber-500/50 text-amber-300 hover:bg-amber-900/60'
                 : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-white/10'
@@ -209,7 +233,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Open Chat Drawer Button */}
         <button
           onClick={onToggleChat}
-          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
+          aria-label={isChatOpen ? `Close Companion Chat with ${botSettings.name}` : `Open Companion Chat with ${botSettings.name}`}
+          aria-expanded={isChatOpen}
+          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
             isChatOpen
               ? 'bg-cyan-600 text-white border-cyan-400 shadow-md shadow-cyan-600/30'
               : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-white/10'

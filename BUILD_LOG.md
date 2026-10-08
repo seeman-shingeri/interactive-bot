@@ -380,6 +380,21 @@ This document tracks completed engineering tasks, test executions, production bu
 - **Commit Hash**: `9c5cc13`
 - **Push Status**: Successfully pushed to `origin/main`
 
+---
+
+## 2026-10-08 — Sprint Task 1: Navbar Accessibility Roles and Keyboard Focus
+
+- **Task Name**: Sprint Task 1 — Navbar Accessibility Roles and Keyboard Focus
+- **Feature / Fix**:
+  - Added ARIA `tablist` and `tab` roles with `aria-selected` tracking across main navigation tabs in `src/components/common/Navbar.tsx`.
+  - Added `aria-label` and `aria-pressed`/`aria-expanded` attributes to quick action controls (Quiet Mode, Chat Drawer, Download, Shortcuts modal, and Mobile select).
+  - Added keyboard interaction (`Enter` / `Space`) and `focus-visible` styling to the brand home button.
+- **Tests & Build Results**:
+  - `npx tsc --noEmit`: 0 errors.
+- **Commit Hash**: [Pending]
+- **Push Status**: Successfully pushed to `origin/main`
+
+
 
 
 
