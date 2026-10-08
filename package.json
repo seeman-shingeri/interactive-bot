@@ -8,6 +8,8 @@
     "client": "vite",
     "server": "node --loader ts-node/esm server/index.ts || tsx server/index.ts || node server/index.js",
     "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
     "preview": "vite preview",
     "test": "tsx test_suite.ts",
     "test:unit": "tsx tests/companion_unit_tests.ts",
