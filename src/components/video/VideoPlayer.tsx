@@ -22,6 +22,7 @@ import {
   Upload,
   AlertCircle,
   Camera,
+  RotateCcw,
 } from 'lucide-react';
 import { VideoItem, SceneMetadata, TranscriptCue, BotReaction } from '../../types/index.js';
 import { VideoFrameSampler } from './VideoFrameSampler.js';
@@ -255,18 +256,34 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             </div>
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-white">Stream Unavailable or Format Error</h4>
-              <p className="text-xs text-slate-400 max-w-xs">
-                Unable to load video stream. The video link may have expired or is blocked by CORS.
+              <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+                Unable to load "{currentVideo.title}". The video link may have expired, requires CORS headers, or is an unsupported format.
               </p>
             </div>
-            <button
-              onClick={() => {
-                if (playlist.length > 0) onVideoSelect(playlist[0]);
-              }}
-              className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
-            >
-              Switch to Default Channel
-            </button>
+            <div className="flex items-center space-x-2 pt-1">
+              <button
+                onClick={() => {
+                  setHasMediaError(false);
+                  if (videoRef.current) {
+                    videoRef.current.load();
+                    videoRef.current.play().catch(() => {});
+                  }
+                }}
+                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-white/10 transition-all active:scale-95"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Retry Stream</span>
+              </button>
+              <button
+                onClick={() => {
+                  setHasMediaError(false);
+                  setShowPlaylist(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md transition-all active:scale-95"
+              >
+                Browse Channels
+              </button>
+            </div>
           </div>
         )}
 

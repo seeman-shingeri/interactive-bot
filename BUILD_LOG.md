@@ -391,8 +391,23 @@ This document tracks completed engineering tasks, test executions, production bu
   - Added keyboard interaction (`Enter` / `Space`) and `focus-visible` styling to the brand home button.
 - **Tests & Build Results**:
   - `npx tsc --noEmit`: 0 errors.
+- **Commit Hash**: `ba0ae25`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-08 — Sprint Task 2: Video Playback Error Handling and Stream Recovery Banner
+
+- **Task Name**: Sprint Task 2 — Video Playback Error Handling and Stream Recovery Banner
+- **Feature / Fix**:
+  - Enhanced the video playback error screen in `src/components/video/VideoPlayer.tsx` with friendly stream error context.
+  - Added direct "Retry Stream" action calling `video.load()` with automatic media error reset.
+  - Added "Browse Channels" action opening the source playlist drawer directly from the error state.
+- **Tests & Build Results**:
+  - `npx tsc --noEmit`: 0 errors.
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 
 
 
