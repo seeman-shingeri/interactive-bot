@@ -233,14 +233,42 @@ export const CompanionChat: React.FC<CompanionChatProps> = ({
       {/* Messages List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3.5 scrollbar-thin scrollbar-thumb-white/10">
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 space-y-2">
-            <Sparkles className="w-8 h-8 text-cyan-400/60" />
-            <p className="text-xs font-medium text-slate-300">
-              Watching alongside you!
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Ask {botSettings.name} about what's happening on screen or tap a quick prompt below.
-            </p>
+          <div className="h-full flex flex-col items-center justify-center text-center p-5 text-slate-400 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-500/10">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">
+                Watching alongside you!
+              </p>
+              <p className="text-xs text-slate-400 mt-1 max-w-xs">
+                Ask {botSettings.name} about what's happening on screen or tap an idea to begin:
+              </p>
+            </div>
+
+            <div className="w-full flex flex-col space-y-2 pt-1">
+              {[
+                { label: "What's happening in this scene?", desc: 'Real-time scene breakdown' },
+                { label: 'Analyze the visual style & mood', desc: 'Lighting & aesthetic cues' },
+                { label: 'Would I probably like this?', desc: 'Check against your taste profile' },
+              ].map((starter, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSend(starter.label)}
+                  className="w-full text-left p-3 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-white/10 hover:border-cyan-400/40 transition-all group flex items-center justify-between shadow-sm active:scale-[0.98]"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition-colors">
+                      {starter.label}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {starter.desc}
+                    </span>
+                  </div>
+                  <Sparkles className="w-3.5 h-3.5 text-slate-600 group-hover:text-cyan-400 transition-colors flex-shrink-0 ml-2" />
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
