@@ -122,13 +122,32 @@ Or run either individually:
   ```
   Visit: `http://localhost:5173`
 
+### 3. Developer Tooling & Verification Scripts
+- **Fast Static Typecheck**:
+  ```bash
+  npm run typecheck
+  ```
+- **Lint Verification**:
+  ```bash
+  npm run lint
+  ```
+- **Companion Unit Tests**:
+  ```bash
+  npm run test:unit
+  ```
+- **Production Bundle Build**:
+  ```bash
+  npm run build
+  ```
+
 ---
 
 ## 🧪 Automated Test Suite Verification
 
-Run the comprehensive test suite verifying all 20+ requirements from Section 32:
+Run the comprehensive integration test suite verifying all 20+ requirements from Section 32:
 ```bash
-npx tsx test_suite.ts
+npm test
+# or: npx tsx test_suite.ts
 ```
 
 ### Test Suite Results:
