@@ -462,8 +462,23 @@ This document tracks completed engineering tasks, test executions, production bu
   - Added accessors for video bookmarking (`getLastVideoId`, `saveLastVideoId`) and offline chat persistence (`getOfflineChatHistory`, `saveOfflineChatHistory`).
 - **Tests & Build Results**:
   - `npm run typecheck`: Passed (exit code 0, 0 errors).
+- **Commit Hash**: `dc956b8`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-08 — Sprint Task 7: Toast Queue Hover-Pause and Accessible Dismiss
+
+- **Task Name**: Sprint Task 7 — Toast Queue Hover-Pause and Accessible Dismiss
+- **Feature / Fix**:
+  - Implemented `ToastItemCard` component in `src/components/common/ToastQueue.tsx` with dynamic hover timer pause (`onMouseEnter` / `onMouseLeave`).
+  - Added explicit `role="alert"` and `aria-live="polite"` for screen readers.
+  - Added accessible `aria-label="Dismiss notification"` and keyboard focus styling to dismiss button.
+- **Tests & Build Results**:
+  - `npm run typecheck`: Passed (exit code 0, 0 errors).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 
 
 
