@@ -29,6 +29,21 @@ export const ViewingHistoryView: React.FC<ViewingHistoryViewProps> = ({
             Recorded sessions and videos watched alongside your AI companion.
           </p>
         </div>
+
+        {onClearHistory && history.length > 0 && (
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to clear your entire viewing history? This cannot be undone.')) {
+                onClearHistory();
+              }
+            }}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
+            aria-label="Clear all viewing history"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear History</span>
+          </button>
+        )}
       </div>
 
       {history.length === 0 ? (

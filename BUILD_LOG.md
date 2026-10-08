@@ -432,8 +432,24 @@ This document tracks completed engineering tasks, test executions, production bu
   - Added standard `npm run typecheck` (`tsc --noEmit`) and `npm run lint` (`tsc --noEmit`) scripts to `package.json` for rapid type validation without emitting files or invoking Vite bundling.
 - **Tests & Build Results**:
   - `npm run typecheck`: Passed (exit code 0, 0 errors).
+- **Commit Hash**: `743ef51`
+- **Push Status**: Successfully pushed to `origin/main`
+
+---
+
+## 2026-10-08 — Sprint Task 5: Viewing History Clear Action and Endpoint
+
+- **Task Name**: Sprint Task 5 — Viewing History Clear Action and Endpoint
+- **Feature / Fix**:
+  - Added `clearViewingHistory(userId)` method in `server/db.ts` to purge viewing sessions across memory tiers and log activity.
+  - Added `DELETE /api/history` endpoint in `server/index.ts` to clear viewing records.
+  - Added `clearViewingHistory()` client method in `src/services/api.ts`.
+  - Added "Clear History" confirmation action in `src/components/history/ViewingHistoryView.tsx` and connected it in `src/App.tsx`.
+- **Tests & Build Results**:
+  - `npm run typecheck`: Passed (exit code 0, 0 errors).
 - **Commit Hash**: [Pending]
 - **Push Status**: Successfully pushed to `origin/main`
+
 
 
 

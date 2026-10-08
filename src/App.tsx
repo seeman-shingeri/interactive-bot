@@ -809,6 +809,15 @@ export const App: React.FC = () => {
                 setCurrentTab('watch');
               }
             }}
+            onClearHistory={async () => {
+              await api.clearViewingHistory();
+              await loadData();
+              toast.addToast({
+                type: 'info',
+                title: 'History Cleared',
+                message: 'Viewing sessions history cleared.',
+              });
+            }}
           />
         )}
 

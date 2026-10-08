@@ -825,6 +825,17 @@ class Database {
     return this.data.viewingSessions.filter((s) => s.userId === userId);
   }
 
+  clearViewingHistory(userId: string): { success: boolean; clearedCount: number } {
+    const sessionCount = this.sessionOnlyCache.viewingSessions.filter((s) => s.userId === userId).length;
+    this.sessionOnlyCache.viewingSessions = this.sessionOnlyCache.viewingSessions.filter((s) => s.userId !== userId);
+
+    const count = this.data.viewingSessions.filter((s) => s.userId === userId).length;
+    this.data.viewingSessions = this.data.viewingSessions.filter((s) => s.userId !== userId);
+    this.save();
+    this.logActivity(userId, 'Cleared viewing history', 'privacy', `Cleared ${count + sessionCount} viewing sessions`);
+    return { success: true, clearedCount: count + sessionCount };
+  }
+
   // --- Conversation Messages ---
   addChatMessage(msg: Omit<ConversationMessageRecord, 'id' | 'timestamp'>): ConversationMessageRecord | null {
     const privacy = this.getPrivacySettings(msg.userId);

@@ -185,6 +185,12 @@ export const api = {
     });
   },
 
+  async clearViewingHistory(): Promise<{ success: boolean; clearedCount: number }> {
+    return fetchJson(`${API_BASE}/history`, {
+      method: 'DELETE',
+    });
+  },
+
   async getObservations(videoId?: string): Promise<VisualObservation[]> {
     const url = videoId ? `${API_BASE}/observations?videoId=${videoId}` : `${API_BASE}/observations`;
     return fetchJson(url);

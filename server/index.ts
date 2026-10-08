@@ -262,6 +262,15 @@ app.post('/api/history', (req, res) => {
   res.json(session);
 });
 
+app.delete('/api/history', (req, res) => {
+  const userId = getUserId(req);
+  const result = db.clearViewingHistory(userId);
+  res.json({
+    message: 'Viewing history cleared successfully',
+    ...result,
+  });
+});
+
 // --- Visual Observations Routes ---
 app.get('/api/observations', (req, res) => {
   const userId = getUserId(req);
