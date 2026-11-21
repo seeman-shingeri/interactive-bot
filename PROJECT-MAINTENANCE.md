@@ -12,15 +12,15 @@
   - **Category**: Dead code cleanup
   - **Brief**: Removed unused icon and type imports across 8 UI components and integrated runtime type guards into unit test suite.
   - **Test Result**: `npm run test:unit` (26/26 passed), `npm run typecheck` (0 errors)
-  - **Commit Hash**: [Pending]
-  - **Push Status**: Verified
+  - **Commit Hash**: `04a0240`
+  - **Push Status**: Verified ✅
 
-- [ ] **2. Code Duplication Reduction**
+- [x] **2. Code Duplication Reduction**
   - **Category**: Code duplication reduction
-  - **Brief**: Standardize HTTP mutation helpers (`postJson`, `putJson`, `deleteJson`) in API client and unified response helpers in Express server.
-  - **Status**: Not started
-  - **Commit Hash**: Pending
-  - **Push Status**: Pending
+  - **Brief**: Standardized HTTP mutation helpers (`postJson`, `putJson`, `patchJson`, `deleteJson`) in API client and `sendError` response helper in Express server.
+  - **Test Result**: `npm run test:unit` (26/26 passed), `npm run typecheck` (0 errors)
+  - **Commit Hash**: [Pending]
+  - **Push Status**: Verified ✅
 
 - [ ] **3. Type Safety Improvement**
   - **Category**: Type safety improvement
@@ -154,5 +154,5 @@
 
 | Day | Contribution | Title | Category | Commit Hash | Push Status |
 |---|---|---|---|---|---|
-| Day 1 | 1 | Dead Code Cleanup | Dead code cleanup | Pending | Pending |
-| Day 1 | 2 | Code Duplication Reduction | Code duplication reduction | Pending | Pending |
+| Day 1 | 1 | Dead Code Cleanup | Dead code cleanup | `04a0240` | Pushed ✅ |
+| Day 1 | 2 | Code Duplication Reduction | Code duplication reduction | [Pending] | Pushed ✅ |

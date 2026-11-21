@@ -22,6 +22,11 @@ const getUserId = (req: express.Request): string => {
   return (req.headers['x-user-id'] as string) || 'default_user';
 };
 
+// Standardized JSON error response helper to eliminate duplicated error payload construction
+const sendError = (res: express.Response, status: number, error: string) => {
+  return res.status(status).json({ error });
+};
+
 // --- Status & Config Routes ---
 app.get('/api/status', (req, res) => {
   const userId = getUserId(req);
@@ -48,7 +53,7 @@ app.get('/api/status', (req, res) => {
 app.post('/api/config/api-key', (req, res) => {
   const { apiKey } = req.body;
   if (!apiKey || typeof apiKey !== 'string') {
-    return res.status(400).json({ error: 'Valid apiKey string required' });
+    return sendError(res, 400, 'Valid apiKey string required');
   }
 
   providerFactory.setApiKey(apiKey.trim());
@@ -70,7 +75,7 @@ app.get('/api/download/bot', (req, res) => {
     if (fs.existsSync(fallbackPath)) {
       res.download(fallbackPath, 'vista-companion.html');
     } else {
-      res.status(404).json({ error: 'Standalone companion file not found' });
+      sendError(res, 404, 'Standalone companion file not found');
     }
   }
 });
@@ -114,7 +119,7 @@ app.post('/api/taste-signal', (req, res) => {
   const { videoId, videoTitle, signalType, category, genres, themes, visualStyle, sourceReason } = req.body;
 
   if (!videoId || !signalType) {
-    return res.status(400).json({ error: 'Missing required signal fields' });
+    return sendError(res, 400, 'Missing required signal fields');
   }
 
   const signal = db.addTasteSignal({
@@ -145,7 +150,7 @@ app.post('/api/memory/items', (req, res) => {
   const { key, category, value, reason } = req.body;
 
   if (!key || !value) {
-    return res.status(400).json({ error: 'Missing key or value' });
+    return sendError(res, 400, 'Missing key or value');
   }
 
   const item = db.addMemoryItem(userId, {
@@ -178,7 +183,7 @@ app.put('/api/memory/items/:id', (req, res) => {
     tags,
   });
   if (!updated) {
-    return res.status(404).json({ error: 'Memory item not found' });
+    return sendError(res, 404, 'Memory item not found');
   }
   res.json(updated);
 });
@@ -187,7 +192,7 @@ app.patch('/api/memory/items/:id/toggle', (req, res) => {
   const userId = getUserId(req);
   const updated = db.toggleMemoryItem(userId, req.params.id);
   if (!updated) {
-    return res.status(404).json({ error: 'Memory item not found' });
+    return sendError(res, 404, 'Memory item not found');
   }
   res.json(updated);
 });
@@ -196,7 +201,7 @@ app.post('/api/memory/items/:id/confirm', (req, res) => {
   const userId = getUserId(req);
   const updated = db.confirmMemoryItem(userId, req.params.id);
   if (!updated) {
-    return res.status(404).json({ error: 'Memory item not found' });
+    return sendError(res, 404, 'Memory item not found');
   }
   res.json(updated);
 });
@@ -339,7 +344,7 @@ app.post('/api/ai/analyze-frame', async (req, res) => {
   const privacy = db.getPrivacySettings(userId);
 
   if (!checkAiBudget(userId)) {
-    return res.status(429).json({ error: 'AI budget limit reached. Please wait before making more requests.' });
+    return sendError(res, 429, 'AI budget limit reached. Please wait before making more requests.');
   }
 
   if (!privacy.visualAnalysisEnabled) {
@@ -409,7 +414,7 @@ app.post('/api/ai/reaction', async (req, res) => {
   }
 
   if (!checkAiBudget(userId)) {
-    return res.status(429).json({ error: 'AI budget limit reached. Please wait before making more requests.' });
+    return sendError(res, 429, 'AI budget limit reached. Please wait before making more requests.');
   }
 
   aiMetrics.totalRequests++;
@@ -502,11 +507,11 @@ app.post('/api/ai/chat', async (req, res) => {
   const { userMessage, videoContext, sessionId, recentHistory } = req.body;
 
   if (!userMessage) {
-    return res.status(400).json({ error: 'userMessage required' });
+    return sendError(res, 400, 'userMessage required');
   }
 
   if (!checkAiBudget(userId)) {
-    return res.status(429).json({ error: 'AI budget limit reached. Please wait before making more requests.' });
+    return sendError(res, 429, 'AI budget limit reached. Please wait before making more requests.');
   }
 
   // Token optimization: rolling conversation window of most recent 6 messages
@@ -603,23 +608,23 @@ app.post('/api/tasks', (req, res) => {
   const { title, description, type, schedule } = req.body;
 
   if (!title || typeof title !== 'string' || !title.trim()) {
-    return res.status(400).json({ error: 'Valid task title required' });
+    return sendError(res, 400, 'Valid task title required');
   }
 
   if (title.trim().length > 120) {
-    return res.status(400).json({ error: 'Task title cannot exceed 120 characters' });
+    return sendError(res, 400, 'Task title cannot exceed 120 characters');
   }
 
   if (schedule?.recurring) {
     const mins = Number(schedule.intervalMinutes);
     if (!Number.isFinite(mins) || mins < 5 || mins > 10080) {
-      return res.status(400).json({ error: 'Recurring interval must be between 5 and 10080 minutes (1 week)' });
+      return sendError(res, 400, 'Recurring interval must be between 5 and 10080 minutes (1 week)');
     }
   }
 
   const validTypes = ['video_summary', 'preference_refresh', 'scene_index', 'custom_agent'];
   if (type && !validTypes.includes(type)) {
-    return res.status(400).json({ error: `Invalid task type. Must be one of: ${validTypes.join(', ')}` });
+    return sendError(res, 400, `Invalid task type. Must be one of: ${validTypes.join(', ')}`);
   }
 
   const task = db.createTask(userId, {
@@ -645,7 +650,7 @@ app.put('/api/tasks/:id', (req, res) => {
   });
 
   if (!updated) {
-    return res.status(404).json({ error: 'Task not found' });
+    return sendError(res, 404, 'Task not found');
   }
   res.json(updated);
 });
@@ -654,7 +659,7 @@ app.post('/api/tasks/:id/cancel', (req, res) => {
   const userId = getUserId(req);
   const success = db.cancelTask(userId, req.params.id);
   if (!success) {
-    return res.status(400).json({ error: 'Task not found or cannot be cancelled' });
+    return sendError(res, 400, 'Task not found or cannot be cancelled');
   }
   res.json({ success: true, message: 'Task cancelled' });
 });
@@ -663,7 +668,7 @@ app.post('/api/tasks/:id/retry', (req, res) => {
   const userId = getUserId(req);
   const task = db.retryTask(userId, req.params.id);
   if (!task) {
-    return res.status(400).json({ error: 'Task not found or max retries exceeded' });
+    return sendError(res, 400, 'Task not found or max retries exceeded');
   }
   res.json(task);
 });
@@ -672,7 +677,7 @@ app.post('/api/tasks/:id/run', async (req, res) => {
   const userId = getUserId(req);
   const task = await taskExecutor.executeTask(userId, req.params.id);
   if (!task) {
-    return res.status(404).json({ error: 'Task not found' });
+    return sendError(res, 404, 'Task not found');
   }
   res.json(task);
 });
@@ -681,7 +686,7 @@ app.post('/api/tasks/:id/pause', (req, res) => {
   const userId = getUserId(req);
   const task = taskExecutor.pauseTask(userId, req.params.id);
   if (!task) {
-    return res.status(404).json({ error: 'Task not found' });
+    return sendError(res, 404, 'Task not found');
   }
   res.json(task);
 });
@@ -690,7 +695,7 @@ app.post('/api/tasks/:id/resume', async (req, res) => {
   const userId = getUserId(req);
   const task = await taskExecutor.executeTask(userId, req.params.id);
   if (!task) {
-    return res.status(404).json({ error: 'Task not found' });
+    return sendError(res, 404, 'Task not found');
   }
   res.json(task);
 });

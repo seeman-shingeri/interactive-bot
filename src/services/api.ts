@@ -52,6 +52,36 @@ async function fetchJson<T = any>(url: string, options?: RequestInit): Promise<T
   return promise;
 }
 
+function postJson<T = any>(url: string, body?: unknown): Promise<T> {
+  return fetchJson<T>(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
+function putJson<T = any>(url: string, body?: unknown): Promise<T> {
+  return fetchJson<T>(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
+function patchJson<T = any>(url: string, body?: unknown): Promise<T> {
+  return fetchJson<T>(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
+function deleteJson<T = any>(url: string): Promise<T> {
+  return fetchJson<T>(url, {
+    method: 'DELETE',
+  });
+}
+
 /**
  * Debounce helper for client-side event throttling
  */
@@ -72,11 +102,7 @@ export const api = {
   },
 
   async setApiKey(apiKey: string) {
-    return fetchJson(`${API_BASE}/config/api-key`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey }),
-    });
+    return postJson(`${API_BASE}/config/api-key`, { apiKey });
   },
 
   async getBotProfile(): Promise<BotSettings> {
@@ -84,11 +110,7 @@ export const api = {
   },
 
   async updateBotProfile(partial: Partial<BotSettings>): Promise<BotSettings> {
-    return fetchJson(`${API_BASE}/bot-profile`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(partial),
-    });
+    return putJson(`${API_BASE}/bot-profile`, partial);
   },
 
   async getPrivacySettings(): Promise<PrivacySettings> {
@@ -96,11 +118,7 @@ export const api = {
   },
 
   async updatePrivacySettings(partial: Partial<PrivacySettings>): Promise<PrivacySettings> {
-    return fetchJson(`${API_BASE}/privacy`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(partial),
-    });
+    return putJson(`${API_BASE}/privacy`, partial);
   },
 
   async getTasteProfile(): Promise<{ profile: TasteProfile; signals: TasteSignal[] }> {
@@ -117,11 +135,7 @@ export const api = {
     visualStyle?: string;
     sourceReason?: string;
   }): Promise<{ signal: TasteSignal | null; updatedProfile: TasteProfile }> {
-    return fetchJson(`${API_BASE}/taste-signal`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    return postJson(`${API_BASE}/taste-signal`, payload);
   },
 
   async getMemoryItems(): Promise<MemoryItem[]> {
@@ -134,43 +148,27 @@ export const api = {
     value: string;
     reason?: string;
   }): Promise<MemoryItem> {
-    return fetchJson(`${API_BASE}/memory/items`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    return postJson(`${API_BASE}/memory/items`, payload);
   },
 
   async deleteMemoryItem(id: string): Promise<{ success: boolean }> {
-    return fetchJson(`${API_BASE}/memory/items/${id}`, {
-      method: 'DELETE',
-    });
+    return deleteJson(`${API_BASE}/memory/items/${id}`);
   },
 
   async updateMemoryItem(id: string, partial: Partial<MemoryItem>): Promise<MemoryItem> {
-    return fetchJson(`${API_BASE}/memory/items/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(partial),
-    });
+    return putJson(`${API_BASE}/memory/items/${id}`, partial);
   },
 
   async toggleMemoryItem(id: string): Promise<MemoryItem> {
-    return fetchJson(`${API_BASE}/memory/items/${id}/toggle`, {
-      method: 'PATCH',
-    });
+    return patchJson(`${API_BASE}/memory/items/${id}/toggle`);
   },
 
   async confirmMemoryItem(id: string): Promise<MemoryItem> {
-    return fetchJson(`${API_BASE}/memory/items/${id}/confirm`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/memory/items/${id}/confirm`);
   },
 
   async deleteAllMemory(): Promise<{ success: boolean; message: string; clearedCount: number }> {
-    return fetchJson(`${API_BASE}/memory/all`, {
-      method: 'DELETE',
-    });
+    return deleteJson(`${API_BASE}/memory/all`);
   },
 
   async getViewingHistory(): Promise<ViewingSession[]> {
@@ -178,17 +176,11 @@ export const api = {
   },
 
   async recordViewingSession(session: Omit<ViewingSession, 'id' | 'userId'>): Promise<ViewingSession> {
-    return fetchJson(`${API_BASE}/history`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(session),
-    });
+    return postJson(`${API_BASE}/history`, session);
   },
 
   async clearViewingHistory(): Promise<{ success: boolean; clearedCount: number }> {
-    return fetchJson(`${API_BASE}/history`, {
-      method: 'DELETE',
-    });
+    return deleteJson(`${API_BASE}/history`);
   },
 
   async getObservations(videoId?: string): Promise<VisualObservation[]> {
@@ -201,11 +193,7 @@ export const api = {
     sessionId?: string;
     videoContext: any;
   }) {
-    return fetchJson(`${API_BASE}/ai/analyze-frame`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    return postJson(`${API_BASE}/ai/analyze-frame`, payload);
   },
 
   async generateReaction(payload: {
@@ -213,11 +201,7 @@ export const api = {
     isSceneChange?: boolean;
     recentBotComments?: string[];
   }): Promise<{ reaction: BotReaction | null }> {
-    return fetchJson(`${API_BASE}/ai/reaction`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    return postJson(`${API_BASE}/ai/reaction`, payload);
   },
 
   async sendChatMessage(payload: {
@@ -226,11 +210,7 @@ export const api = {
     sessionId?: string;
     recentHistory?: { sender: 'user' | 'bot'; text: string }[];
   }): Promise<{ botReply: string; emotion: any; suggestedMemory?: any }> {
-    return fetchJson(`${API_BASE}/ai/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    return postJson(`${API_BASE}/ai/chat`, payload);
   },
 
   async getChatHistory(sessionId?: string): Promise<ChatMessage[]> {
@@ -240,7 +220,7 @@ export const api = {
 
   async clearChatHistory(sessionId?: string): Promise<{ success: boolean }> {
     const url = sessionId ? `${API_BASE}/chat/history?sessionId=${sessionId}` : `${API_BASE}/chat/history`;
-    return fetchJson(url, { method: 'DELETE' });
+    return deleteJson(url);
   },
 
   async getTasks(): Promise<TaskItem[]> {
@@ -253,55 +233,35 @@ export const api = {
     type?: TaskType;
     schedule?: TaskItem['schedule'];
   }): Promise<TaskItem> {
-    return fetchJson(`${API_BASE}/tasks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    return postJson(`${API_BASE}/tasks`, payload);
   },
 
   async updateTask(id: string, updates: Partial<TaskItem>): Promise<TaskItem> {
-    return fetchJson(`${API_BASE}/tasks/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
+    return putJson(`${API_BASE}/tasks/${id}`, updates);
   },
 
   async cancelTask(id: string): Promise<{ success: boolean; message?: string }> {
-    return fetchJson(`${API_BASE}/tasks/${id}/cancel`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/tasks/${id}/cancel`);
   },
 
   async retryTask(id: string): Promise<TaskItem> {
-    return fetchJson(`${API_BASE}/tasks/${id}/retry`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/tasks/${id}/retry`);
   },
 
   async runTask(id: string): Promise<TaskItem> {
-    return fetchJson(`${API_BASE}/tasks/${id}/run`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/tasks/${id}/run`);
   },
 
   async pauseTask(id: string): Promise<TaskItem> {
-    return fetchJson(`${API_BASE}/tasks/${id}/pause`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/tasks/${id}/pause`);
   },
 
   async resumeTask(id: string): Promise<TaskItem> {
-    return fetchJson(`${API_BASE}/tasks/${id}/resume`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/tasks/${id}/resume`);
   },
 
   async checkScheduledTasks(): Promise<{ executedCount: number; executedTasks: TaskItem[] }> {
-    return fetchJson(`${API_BASE}/tasks/scheduler/check`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/tasks/scheduler/check`);
   },
 
   async getSchedulerStatus(): Promise<{
@@ -317,9 +277,7 @@ export const api = {
   },
 
   async clearActivities(): Promise<{ success: boolean; message: string }> {
-    return fetchJson(`${API_BASE}/activities`, {
-      method: 'DELETE',
-    });
+    return deleteJson(`${API_BASE}/activities`);
   },
 
   async exportUserData(): Promise<any> {
@@ -338,8 +296,6 @@ export const api = {
   },
 
   async clearAiCache(): Promise<{ success: boolean; message: string }> {
-    return fetchJson(`${API_BASE}/ai/cache/clear`, {
-      method: 'POST',
-    });
+    return postJson(`${API_BASE}/ai/cache/clear`);
   },
 };
