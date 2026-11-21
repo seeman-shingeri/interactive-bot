@@ -6,6 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import { hexToRgba, calculateLuminance, getDominantMoodColor, getAmbilightBoxShadow } from '../src/utils/color.js';
+import { isBotEmotion, isReactionLevel, isBotPersonalityPreset, isDataStorageMode } from '../src/types/guards.js';
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -90,6 +91,16 @@ async function runUnitTests() {
   // Test 8: Ambilight box-shadow CSS rule generation
   const shadow = getAmbilightBoxShadow('#00d2ff', 0.25);
   assert(shadow.includes('rgba(0, 210, 255, 0.25)'), 'getAmbilightBoxShadow formats valid CSS shadow with rgba');
+
+  // Test 9: Runtime Type Guards Validation
+  assert(isBotEmotion('watching') === true, 'isBotEmotion identifies valid emotion "watching"');
+  assert(isBotEmotion('invalid_emotion') === false, 'isBotEmotion rejects invalid emotion');
+  assert(isReactionLevel('NORMAL') === true, 'isReactionLevel identifies valid level "NORMAL"');
+  assert(isReactionLevel('SUPER_HIGH') === false, 'isReactionLevel rejects unknown level');
+  assert(isBotPersonalityPreset('Curious') === true, 'isBotPersonalityPreset identifies valid preset "Curious"');
+  assert(isBotPersonalityPreset('Aggressive') === false, 'isBotPersonalityPreset rejects unlisted preset');
+  assert(isDataStorageMode('personal_memory') === true, 'isDataStorageMode identifies valid mode "personal_memory"');
+  assert(isDataStorageMode('cloud_leak') === false, 'isDataStorageMode rejects invalid mode');
 
   console.log('\n🎉 All Companion Unit Tests Passed Successfully!\n');
 }

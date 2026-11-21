@@ -9,9 +9,6 @@ import {
   Check,
   RotateCcw,
   Zap,
-  Smile,
-  Shield,
-  Layers,
   Download,
   Feather,
 } from 'lucide-react';

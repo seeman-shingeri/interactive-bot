@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { BotEmotion, BotSettings, PrivacySettings, BotReaction } from '../../types/index.js';
 import { GrabControlRadial } from './GrabControlRadial.js';
 import { SpeechBubble } from './SpeechBubble.js';
-import { Sparkles, MessageSquare, Maximize2, Minimize2, Eye, EyeOff } from 'lucide-react';
+import { Sparkles, MessageSquare, Eye } from 'lucide-react';
 import { audioFeedback } from '../../utils/audioFeedback.js';
 
 interface CompanionAvatarProps {

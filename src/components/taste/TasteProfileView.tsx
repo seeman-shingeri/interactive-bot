@@ -19,7 +19,6 @@ import {
   Plus,
   Check,
   Shield,
-  Tag,
   AlertTriangle,
   Search,
   Filter,

@@ -10,7 +10,6 @@ import {
   Eye,
   EyeOff,
   Brain,
-  Database,
   Download,
   Keyboard,
   ListTodo,

@@ -11,12 +11,9 @@ import {
   X,
   AlertCircle,
   Activity,
-  Layers,
   Sparkles,
   Calendar,
   Cpu,
-  ArrowRight,
-  TrendingUp,
   Trash2,
   Search,
 } from 'lucide-react';

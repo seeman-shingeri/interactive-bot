@@ -3,14 +3,11 @@ import {
   Send,
   Mic,
   MicOff,
-  Volume2,
-  VolumeX,
   Sparkles,
   RotateCcw,
   X,
   BookmarkPlus,
   Bot,
-  User,
   Radio,
   Edit3,
 } from 'lucide-react';
@@ -19,7 +16,6 @@ import {
   BotSettings,
   PrivacySettings,
   SceneMetadata,
-  TasteProfile,
   MemoryItem,
 } from '../../types/index.js';
 import { speechService } from '../../services/speech.js';

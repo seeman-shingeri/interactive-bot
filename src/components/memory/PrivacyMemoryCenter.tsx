@@ -11,8 +11,6 @@ import {
   Mic,
   Sparkles,
   Camera,
-  Layers,
-  Info,
   Download,
 } from 'lucide-react';
 import { PrivacySettings } from '../../types/index.js';
