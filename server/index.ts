@@ -314,15 +314,15 @@ const aiMetrics: AiMetrics = {
   estimatedTokensSaved: 0,
 };
 
-const aiResponseCache = new Map<string, { data: any; expiry: number }>();
-const inFlightRequests = new Map<string, Promise<any>>();
+const aiResponseCache = new Map<string, { data: unknown; expiry: number }>();
+const inFlightRequests = new Map<string, Promise<unknown>>();
 
-const getCachedAiResponse = (cacheKey: string): any | null => {
+const getCachedAiResponse = <T = unknown>(cacheKey: string): T | null => {
   const cached = aiResponseCache.get(cacheKey);
   if (cached && cached.expiry > Date.now()) {
     aiMetrics.cacheHits++;
     aiMetrics.estimatedTokensSaved += 250;
-    return cached.data;
+    return cached.data as T;
   }
   if (cached) {
     aiResponseCache.delete(cacheKey);
@@ -330,7 +330,7 @@ const getCachedAiResponse = (cacheKey: string): any | null => {
   return null;
 };
 
-const setCachedAiResponse = (cacheKey: string, data: any, ttlMs: number = 30_000) => {
+const setCachedAiResponse = (cacheKey: string, data: unknown, ttlMs: number = 30_000) => {
   aiResponseCache.set(cacheKey, { data, expiry: Date.now() + ttlMs });
   if (aiResponseCache.size > 100) {
     const firstKey = aiResponseCache.keys().next().value;

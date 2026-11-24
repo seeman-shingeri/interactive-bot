@@ -21,6 +21,7 @@ import { speechService } from './services/speech.js';
 // Components
 import { Navbar, NavTab } from './components/common/Navbar.js';
 import { VideoPlayer } from './components/video/VideoPlayer.js';
+import { FrameSampleData } from './components/video/VideoFrameSampler.js';
 import { CompanionAvatar } from './components/companion/CompanionAvatar.js';
 import { CompanionChat } from './components/chat/CompanionChat.js';
 import { TasteProfileView } from './components/taste/TasteProfileView.js';
@@ -276,7 +277,7 @@ export const App: React.FC = () => {
 
   // Handle Intelligent Video Frame Analysis
   const handleFrameAnalyzed = useCallback(
-    async (sample: any, scene?: SceneMetadata) => {
+    async (sample: FrameSampleData, scene?: SceneMetadata) => {
       if (!privacySettings.visualAnalysisEnabled) return;
 
       try {

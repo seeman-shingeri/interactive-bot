@@ -230,3 +230,61 @@ export interface ViewingSession {
   completedPercentage: number;
   userReactionSummary: string[];
 }
+
+export interface VideoContextPayload {
+  videoId: string;
+  videoTitle: string;
+  timestamp: number;
+  currentScene?: SceneMetadata;
+  recentTranscript?: TranscriptCue[];
+  botPersonality?: BotSettings;
+}
+
+export interface FrameAnalysisPayload {
+  imageBase64?: string;
+  sessionId?: string;
+  videoContext: VideoContextPayload;
+}
+
+export interface ReactionPayload {
+  videoContext: VideoContextPayload;
+  isSceneChange?: boolean;
+  recentBotComments?: string[];
+}
+
+export interface AiChatPayload {
+  userMessage: string;
+  videoContext: VideoContextPayload;
+  sessionId?: string;
+  recentHistory?: { sender: 'user' | 'bot'; text: string }[];
+}
+
+export interface AiChatResponse {
+  botReply: string;
+  emotion: BotEmotion;
+  suggestedMemory?: {
+    key: string;
+    category: MemoryItem['category'];
+    value: string;
+    reason?: string;
+  } | null;
+}
+
+export interface ExportUserDataResponse {
+  exportVersion: string;
+  exportTimestamp: string;
+  userId: string;
+  profile: {
+    botSettings: BotSettings;
+    privacySettings: PrivacySettings;
+    tasteProfile: TasteProfile;
+  };
+  data: {
+    tasteSignals: TasteSignal[];
+    memories: MemoryItem[];
+    viewingHistory: ViewingSession[];
+    observations: VisualObservation[];
+    tasks: TaskItem[];
+    activities: ActivityLogItem[];
+  };
+}

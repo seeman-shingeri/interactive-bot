@@ -11,6 +11,11 @@ import {
   TaskItem,
   TaskType,
   ActivityLogItem,
+  FrameAnalysisPayload,
+  ReactionPayload,
+  AiChatPayload,
+  AiChatResponse,
+  ExportUserDataResponse,
 } from '../types/index.js';
 
 const API_BASE = '/api';
@@ -188,28 +193,15 @@ export const api = {
     return fetchJson(url);
   },
 
-  async analyzeFrame(payload: {
-    imageBase64?: string;
-    sessionId?: string;
-    videoContext: any;
-  }) {
+  async analyzeFrame(payload: FrameAnalysisPayload) {
     return postJson(`${API_BASE}/ai/analyze-frame`, payload);
   },
 
-  async generateReaction(payload: {
-    videoContext: any;
-    isSceneChange?: boolean;
-    recentBotComments?: string[];
-  }): Promise<{ reaction: BotReaction | null }> {
+  async generateReaction(payload: ReactionPayload): Promise<{ reaction: BotReaction | null }> {
     return postJson(`${API_BASE}/ai/reaction`, payload);
   },
 
-  async sendChatMessage(payload: {
-    userMessage: string;
-    videoContext: any;
-    sessionId?: string;
-    recentHistory?: { sender: 'user' | 'bot'; text: string }[];
-  }): Promise<{ botReply: string; emotion: any; suggestedMemory?: any }> {
+  async sendChatMessage(payload: AiChatPayload): Promise<AiChatResponse> {
     return postJson(`${API_BASE}/ai/chat`, payload);
   },
 
@@ -280,7 +272,7 @@ export const api = {
     return deleteJson(`${API_BASE}/activities`);
   },
 
-  async exportUserData(): Promise<any> {
+  async exportUserData(): Promise<ExportUserDataResponse> {
     return fetchJson(`${API_BASE}/user/export`);
   },
 
