@@ -314,8 +314,29 @@ const aiMetrics: AiMetrics = {
   estimatedTokensSaved: 0,
 };
 
+const MAX_CACHE_ENTRIES = 100;
 const aiResponseCache = new Map<string, { data: unknown; expiry: number }>();
 const inFlightRequests = new Map<string, Promise<unknown>>();
+
+const sweepExpiredAiCache = (): number => {
+  const now = Date.now();
+  let sweptCount = 0;
+  for (const [key, item] of aiResponseCache.entries()) {
+    if (now >= item.expiry) {
+      aiResponseCache.delete(key);
+      sweptCount++;
+    }
+  }
+  return sweptCount;
+};
+
+// Periodic background sweep every 60 seconds (unref'd so it does not block process exit)
+const cacheSweepInterval = setInterval(() => {
+  sweepExpiredAiCache();
+}, 60_000);
+if (typeof cacheSweepInterval.unref === 'function') {
+  cacheSweepInterval.unref();
+}
 
 const getCachedAiResponse = <T = unknown>(cacheKey: string): T | null => {
   const cached = aiResponseCache.get(cacheKey);
@@ -331,10 +352,21 @@ const getCachedAiResponse = <T = unknown>(cacheKey: string): T | null => {
 };
 
 const setCachedAiResponse = (cacheKey: string, data: unknown, ttlMs: number = 30_000) => {
+  // Proactively sweep expired entries when cache reaches 80% capacity
+  if (aiResponseCache.size >= MAX_CACHE_ENTRIES * 0.8) {
+    sweepExpiredAiCache();
+  }
+
   aiResponseCache.set(cacheKey, { data, expiry: Date.now() + ttlMs });
-  if (aiResponseCache.size > 100) {
-    const firstKey = aiResponseCache.keys().next().value;
-    if (firstKey) aiResponseCache.delete(firstKey);
+
+  // If still exceeding MAX_CACHE_ENTRIES, evict oldest entries
+  while (aiResponseCache.size > MAX_CACHE_ENTRIES) {
+    const oldestKey = aiResponseCache.keys().next().value;
+    if (oldestKey) {
+      aiResponseCache.delete(oldestKey);
+    } else {
+      break;
+    }
   }
 };
 
@@ -485,6 +517,7 @@ app.get('/api/ai/metrics', (req, res) => {
     deduplicatedInFlight: aiMetrics.deduplicatedInFlight,
     estimatedTokensSaved: aiMetrics.estimatedTokensSaved,
     activeProvider: providerFactory.getStatus().providerName,
+    cachedEntries: aiResponseCache.size,
   });
 });
 
@@ -754,4 +787,11 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-export { app };
+export {
+  app,
+  sweepExpiredAiCache,
+  getCachedAiResponse,
+  setCachedAiResponse,
+  aiResponseCache,
+  MAX_CACHE_ENTRIES,
+};

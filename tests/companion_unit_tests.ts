@@ -1,7 +1,9 @@
 /**
  * VISTA Companion Unit Test Suite
- * Tests core companion state machines, taste vector normalization, and asset integrity.
+ * Tests core companion state machines, taste vector normalization, asset integrity, and cache TTL sweep.
  */
+
+process.env.NODE_ENV = 'test';
 
 import fs from 'fs';
 import path from 'path';
@@ -102,7 +104,36 @@ async function runUnitTests() {
   assert(isDataStorageMode('personal_memory') === true, 'isDataStorageMode identifies valid mode "personal_memory"');
   assert(isDataStorageMode('cloud_leak') === false, 'isDataStorageMode rejects invalid mode');
 
+  // Test 10: Server AI Response Cache TTL & Proactive Sweep
+  const {
+    sweepExpiredAiCache,
+    getCachedAiResponse,
+    setCachedAiResponse,
+    aiResponseCache,
+    MAX_CACHE_ENTRIES,
+  } = await import('../server/index.js');
+
+  aiResponseCache.clear();
+  setCachedAiResponse('active-key-1', { analysis: 'scene1' }, 60_000);
+  assert(getCachedAiResponse('active-key-1') !== null, 'getCachedAiResponse returns unexpired cached item');
+
+  // Manually insert an expired entry and verify sweepExpiredAiCache purges it
+  aiResponseCache.set('expired-key-1', { data: { text: 'stale' }, expiry: Date.now() - 5000 });
+  assert(aiResponseCache.has('expired-key-1'), 'Expired entry present in cache before sweep');
+  const swept = sweepExpiredAiCache();
+  assert(swept >= 1, `sweepExpiredAiCache purged at least 1 expired entry (purged: ${swept})`);
+  assert(!aiResponseCache.has('expired-key-1'), 'Expired entry was purged from cache after sweep');
+  assert(aiResponseCache.has('active-key-1'), 'Active entry was preserved after sweep');
+
+  // Bounded capacity eviction
+  for (let i = 0; i < MAX_CACHE_ENTRIES + 25; i++) {
+    setCachedAiResponse(`bulk-key-${i}`, { index: i }, 60_000);
+  }
+  assert(aiResponseCache.size <= MAX_CACHE_ENTRIES, `Cache size (${aiResponseCache.size}) does not exceed MAX_CACHE_ENTRIES (${MAX_CACHE_ENTRIES})`);
+  aiResponseCache.clear();
+
   console.log('\n🎉 All Companion Unit Tests Passed Successfully!\n');
+  process.exit(0);
 }
 
 runUnitTests();
