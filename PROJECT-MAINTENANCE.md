@@ -2,7 +2,7 @@
 
 > Autonomous engineering, quality assurance, and gradual project improvement system.
 > **Strict Cadence**: Exactly 2 contributions per work session/day.
-> **Current Status**: Session 2 in progress (Contributions 3 & 4).
+> **Current Status**: Session 3 complete (Contributions 5 & 6 finished — 6/20 complete). Waiting for RESUME.
 
 ---
 
@@ -36,19 +36,19 @@
   - **Commit Hash**: `f834dd2`
   - **Push Status**: Verified ✅
 
-- [ ] **5. Configuration Cleanup**
+- [x] **5. Configuration Cleanup**
   - **Category**: Configuration cleanup
-  - **Brief**: Clean up `tsconfig.json` compiler options and `.env.example` with strict documentation of all environment variables.
-  - **Status**: Not started
-  - **Commit Hash**: Pending
-  - **Push Status**: Pending
+  - **Brief**: Cleaned up `tsconfig.json` compiler options (`forceConsistentCasingInFileNames`, explicit `exclude`) and comprehensive documentation of all environment variables in `.env.example`.
+  - **Test Result**: `npm run typecheck` (0 errors), `npm run test:unit` (26/26 passed)
+  - **Commit Hash**: `daa0e9c`
+  - **Push Status**: Verified ✅
 
-- [ ] **6. Performance Bottleneck Detection**
+- [x] **6. Performance Bottleneck Detection**
   - **Category**: Performance bottleneck detection
-  - **Brief**: Implement proactive TTL sweep in server-side AI response cache to prevent memory bloat during prolonged companion sessions.
-  - **Status**: Not started
-  - **Commit Hash**: Pending
-  - **Push Status**: Pending
+  - **Brief**: Implemented proactive TTL sweep (`sweepExpiredAiCache`), periodic unref'd sweep interval, and bounded eviction in server-side AI response cache to eliminate memory bloat during prolonged sessions.
+  - **Test Result**: `npm run test:unit` (31/31 passed including cache TTL & capacity tests), `npm run typecheck` (0 errors)
+  - **Commit Hash**: `ab9d1ed`
+  - **Push Status**: Verified ✅
 
 - [ ] **7. Memory Leak Prevention**
   - **Category**: Memory leak prevention
@@ -158,3 +158,5 @@
 | Day 1 | 2 | Code Duplication Reduction | Code duplication reduction | `1899d76` | Pushed ✅ |
 | Day 2 | 3 | Type Safety Improvement | Type safety improvement | `f0e8686` | Pushed ✅ |
 | Day 2 | 4 | Dependency Health Audit | Dependency health audit | `f834dd2` | Pushed ✅ |
+| Day 3 | 5 | Configuration Cleanup | Configuration cleanup | `daa0e9c` | Pushed ✅ |
+| Day 3 | 6 | Performance Bottleneck Detection | Performance bottleneck detection | `ab9d1ed` | Pushed ✅ |
