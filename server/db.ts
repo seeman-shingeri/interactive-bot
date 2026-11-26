@@ -343,6 +343,38 @@ class Database {
     conversationMessages: [],
   };
 
+  // In-memory tokenized index for O(1) keyword matching across memory records
+  private memorySearchIndex = new Map<
+    string,
+    { normalizedText: string; tokens: Set<string>; cacheKey: string }
+  >();
+
+  // Short-lived query memoization cache for identical relevance queries
+  private memoryQueryCache = new Map<
+    string,
+    { result: MemoryItemRecord[]; expiry: number }
+  >();
+
+  private getMemorySearchData(mem: MemoryItemRecord): { normalizedText: string; tokens: Set<string> } {
+    const cacheKey = `${mem.id}:${mem.updatedAt}`;
+    const cached = this.memorySearchIndex.get(mem.id);
+    if (cached && cached.cacheKey === cacheKey) {
+      return cached;
+    }
+
+    const text = `${mem.key} ${mem.category} ${mem.value} ${mem.reason || ''} ${(mem.tags || []).join(' ')}`.toLowerCase();
+    const tokenList = text.split(/[^a-z0-9_-]+/).filter((w) => w.length > 1);
+    const tokenSet = new Set(tokenList);
+
+    const entry = { normalizedText: text, tokens: tokenSet, cacheKey };
+    this.memorySearchIndex.set(mem.id, entry);
+    return entry;
+  }
+
+  private invalidateMemoryQueryCache() {
+    this.memoryQueryCache.clear();
+  }
+
   constructor() {
     this.ensureDirectory();
     this.data = this.load();
@@ -597,6 +629,7 @@ class Database {
       existing.value = item.value;
       existing.reason = item.reason;
       existing.updatedAt = new Date().toISOString();
+      this.invalidateMemoryQueryCache();
       this.save();
       return existing;
     }
@@ -609,6 +642,7 @@ class Database {
       updatedAt: new Date().toISOString(),
     };
     this.data.memoryItems.push(newItem);
+    this.invalidateMemoryQueryCache();
     this.save();
     return newItem;
   }
@@ -617,6 +651,8 @@ class Database {
     const initialLen = this.data.memoryItems.length;
     this.data.memoryItems = this.data.memoryItems.filter((m) => !(m.userId === userId && m.id === id));
     if (this.data.memoryItems.length !== initialLen) {
+      this.memorySearchIndex.delete(id);
+      this.invalidateMemoryQueryCache();
       this.save();
       this.logActivity(userId, 'Deleted memory item', 'memory', `Memory ID: ${id}`);
       return true;
@@ -638,6 +674,7 @@ class Database {
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+    this.invalidateMemoryQueryCache();
     this.save();
     this.logActivity(
       userId,
@@ -659,6 +696,7 @@ class Database {
       disabled: newDisabled,
       updatedAt: new Date().toISOString(),
     };
+    this.invalidateMemoryQueryCache();
     this.save();
     this.logActivity(
       userId,
@@ -679,30 +717,51 @@ class Database {
       return [];
     }
 
+    const normalizedQuery = (query || '').trim().toLowerCase();
+    const cacheKey = `${userId}:${limit}:${normalizedQuery}`;
+    const cachedResult = this.memoryQueryCache.get(cacheKey);
+    if (cachedResult && cachedResult.expiry > Date.now()) {
+      return cachedResult.result;
+    }
+
     const activeMemories = this.data.memoryItems.filter(
       (m) => m.userId === userId && !m.disabled && m.isConfirmed !== false
     );
 
-    if (!query || !query.trim()) {
-      return activeMemories
+    let result: MemoryItemRecord[];
+
+    if (!normalizedQuery) {
+      result = activeMemories
         .sort((a, b) => b.confidence - a.confidence || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, limit);
+    } else {
+      const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+      const scored = activeMemories.map((mem) => {
+        let score = mem.confidence;
+        const { normalizedText, tokens: tokenSet } = this.getMemorySearchData(mem);
+
+        for (const token of tokens) {
+          if (tokenSet.has(token)) {
+            score += 2.0;
+          } else if (normalizedText.includes(token)) {
+            score += 1.0;
+          }
+        }
+        return { mem, score };
+      });
+
+      result = scored
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+        .map((item) => item.mem);
     }
 
-    const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
-    const scored = activeMemories.map((mem) => {
-      let score = mem.confidence;
-      const textToSearch = `${mem.key} ${mem.category} ${mem.value} ${mem.reason} ${(mem.tags || []).join(' ')}`.toLowerCase();
-      for (const token of tokens) {
-        if (textToSearch.includes(token)) score += 1.5;
-      }
-      return { mem, score };
+    this.memoryQueryCache.set(cacheKey, {
+      result,
+      expiry: Date.now() + 30_000,
     });
 
-    return scored
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
-      .map((item) => item.mem);
+    return result;
   }
 
   // --- Delete ALL Memory (GDPR / Privacy requirement) ---
@@ -712,6 +771,8 @@ class Database {
     const taskCount = this.data.tasks.filter((t) => t.userId === userId).length;
 
     this.data.memoryItems = this.data.memoryItems.filter((m) => m.userId !== userId);
+    this.memorySearchIndex.clear();
+    this.invalidateMemoryQueryCache();
     this.data.tasteSignals = this.data.tasteSignals.filter((s) => s.userId !== userId);
     this.data.viewingSessions = this.data.viewingSessions.filter((s) => s.userId !== userId);
     this.data.visualObservations = this.data.visualObservations.filter((s) => s.userId !== userId);

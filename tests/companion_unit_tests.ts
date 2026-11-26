@@ -140,6 +140,16 @@ async function runUnitTests() {
   sampler.dispose();
   assert(sampler.sample({ readyState: 4, videoWidth: 640 } as any) === null, 'Disposed VideoFrameSampler returns null without leaking');
 
+  // Test 12: Database Tokenized Memory Relevance and Query Cache
+  const { db } = await import('../server/db.js');
+  const relevantMemories = db.getRelevantMemories('default_user', 'Sci-Fi Space Exploration', 2);
+  assert(relevantMemories.length > 0, 'getRelevantMemories returns matching relevant memories');
+  assert(relevantMemories[0].category === 'genre' || relevantMemories[0].value.includes('Sci-Fi'), 'Top memory matches Sci-Fi keyword');
+
+  // Verify second query uses cached memoization without error
+  const cachedMemories = db.getRelevantMemories('default_user', 'Sci-Fi Space Exploration', 2);
+  assert(cachedMemories.length === relevantMemories.length, 'Memoized query returns consistent result');
+
   console.log('\n🎉 All Companion Unit Tests Passed Successfully!\n');
   process.exit(0);
 }
