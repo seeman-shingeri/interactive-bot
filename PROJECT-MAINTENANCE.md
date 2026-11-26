@@ -2,7 +2,7 @@
 
 > Autonomous engineering, quality assurance, and gradual project improvement system.
 > **Strict Cadence**: Exactly 2 contributions per work session/day.
-> **Current Status**: Session 3 complete (Contributions 5 & 6 finished — 6/20 complete). Waiting for RESUME.
+> **Current Status**: Session 4 complete (Contributions 7 & 8 finished — 8/20 complete). Waiting for RESUME.
 
 ---
 
@@ -50,19 +50,19 @@
   - **Commit Hash**: `ab9d1ed`
   - **Push Status**: Verified ✅
 
-- [ ] **7. Memory Leak Prevention**
+- [x] **7. Memory Leak Prevention**
   - **Category**: Memory leak prevention
-  - **Brief**: Audit object URL lifecycle in `App.tsx` and enforce explicit revocation on unmount or video stream switching.
-  - **Status**: Not started
-  - **Commit Hash**: Pending
-  - **Push Status**: Pending
+  - **Brief**: Audited object URL and media resource lifecycles across `App.tsx`, `VideoPlayer.tsx`, and `VideoFrameSampler.ts`. Added automatic revocation of all tracked blob URLs, unmount cleanup for timeouts, speech cancellation, and canvas/hardware decoder buffer disposal.
+  - **Test Result**: `npm run test:unit` (34/34 passed), `npm run typecheck` (0 errors)
+  - **Commit Hash**: `6b41ef5`
+  - **Push Status**: Verified ✅
 
-- [ ] **8. Database / Query Optimization**
+- [x] **8. Database / Query Optimization**
   - **Category**: Database/query optimization
-  - **Brief**: Optimize selective memory relevance retrieval in `server/db.ts` by pre-caching tokenized search terms.
-  - **Status**: Not started
-  - **Commit Hash**: Pending
-  - **Push Status**: Pending
+  - **Brief**: Optimized selective memory relevance retrieval in `server/db.ts` with in-memory tokenized word indexing (`Set<string>`) for O(1) keyword matching, mutation-invalidated query memoization cache (30s TTL), and exact/substring score boosting.
+  - **Test Result**: `npm run test:unit` (34/34 passed including relevance and memoization tests), `npm run typecheck` (0 errors)
+  - **Commit Hash**: `091242b`
+  - **Push Status**: Verified ✅
 
 - [ ] **9. Build & Bundle Optimization**
   - **Category**: Build/bundle optimization
@@ -160,3 +160,5 @@
 | Day 2 | 4 | Dependency Health Audit | Dependency health audit | `f834dd2` | Pushed ✅ |
 | Day 3 | 5 | Configuration Cleanup | Configuration cleanup | `daa0e9c` | Pushed ✅ |
 | Day 3 | 6 | Performance Bottleneck Detection | Performance bottleneck detection | `ab9d1ed` | Pushed ✅ |
+| Day 4 | 7 | Memory Leak Prevention | Memory leak prevention | `6b41ef5` | Pushed ✅ |
+| Day 4 | 8 | Database / Query Optimization | Database/query optimization | `091242b` | Pushed ✅ |
