@@ -9,21 +9,35 @@ export interface FrameSampleData {
 }
 
 export class VideoFrameSampler {
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D | null;
+  private canvas: HTMLCanvasElement | null = null;
+  private ctx: CanvasRenderingContext2D | null = null;
   private lastLuminance: number = 0;
   private width: number = 384;
   private height: number = 216;
 
   constructor() {
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
-    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+    if (typeof document !== 'undefined') {
+      this.canvas = document.createElement('canvas');
+      this.canvas.width = this.width;
+      this.canvas.height = this.height;
+      this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+    }
+  }
+
+  dispose(): void {
+    if (this.ctx) {
+      this.ctx.clearRect(0, 0, this.width, this.height);
+      this.ctx = null;
+    }
+    if (this.canvas) {
+      this.canvas.width = 0;
+      this.canvas.height = 0;
+      this.canvas = null;
+    }
   }
 
   sample(video: HTMLVideoElement): FrameSampleData | null {
-    if (!this.ctx || video.readyState < 2 || video.videoWidth === 0) {
+    if (!this.ctx || !this.canvas || video.readyState < 2 || video.videoWidth === 0) {
       return null;
     }
 

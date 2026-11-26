@@ -132,6 +132,14 @@ async function runUnitTests() {
   assert(aiResponseCache.size <= MAX_CACHE_ENTRIES, `Cache size (${aiResponseCache.size}) does not exceed MAX_CACHE_ENTRIES (${MAX_CACHE_ENTRIES})`);
   aiResponseCache.clear();
 
+  // Test 11: VideoFrameSampler Lifecycle and Buffer Disposal
+  const { VideoFrameSampler } = await import('../src/components/video/VideoFrameSampler.js');
+  const sampler = new VideoFrameSampler();
+  assert(typeof sampler.sample === 'function', 'VideoFrameSampler provides sample method');
+  assert(typeof sampler.dispose === 'function', 'VideoFrameSampler provides dispose method');
+  sampler.dispose();
+  assert(sampler.sample({ readyState: 4, videoWidth: 640 } as any) === null, 'Disposed VideoFrameSampler returns null without leaking');
+
   console.log('\n🎉 All Companion Unit Tests Passed Successfully!\n');
   process.exit(0);
 }

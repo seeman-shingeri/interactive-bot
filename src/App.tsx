@@ -128,6 +128,29 @@ export const App: React.FC = () => {
   const recentBotCommentsRef = useRef<string[]>([]);
   const sessionStartTimeRef = useRef<number>(Date.now());
   const activeBlobUrlRef = useRef<string | null>(null);
+  const createdBlobUrlsRef = useRef<Set<string>>(new Set());
+
+  // Clean up all allocated resources, timers, audio, and Blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      createdBlobUrlsRef.current.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          // Ignore revocation errors on teardown
+        }
+      });
+      createdBlobUrlsRef.current.clear();
+      activeBlobUrlRef.current = null;
+
+      if (reactionTimeoutRef.current) {
+        clearTimeout(reactionTimeoutRef.current);
+        reactionTimeoutRef.current = null;
+      }
+
+      speechService.cancel();
+    };
+  }, []);
 
   // Load initial backend state
   const loadData = useCallback(async () => {
@@ -434,6 +457,7 @@ export const App: React.FC = () => {
       URL.revokeObjectURL(activeBlobUrlRef.current);
     }
     const objectUrl = URL.createObjectURL(file);
+    createdBlobUrlsRef.current.add(objectUrl);
     activeBlobUrlRef.current = objectUrl;
 
     const customItem: VideoItem = {

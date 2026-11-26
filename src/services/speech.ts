@@ -121,6 +121,11 @@ class SpeechService {
     }
   }
 
+  cancel() {
+    this.stopSpeaking();
+    this.stopListening();
+  }
+
   isSpeechRecognitionSupported(): boolean {
     return Boolean(this.recognition);
   }

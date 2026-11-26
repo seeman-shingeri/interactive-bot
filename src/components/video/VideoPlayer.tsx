@@ -77,10 +77,31 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [currentTranscriptCue, setCurrentTranscriptCue] = useState<TranscriptCue | null>(null);
   const [hasMediaError, setHasMediaError] = useState(false);
 
-  // Reset error on video change
+  // Hardware decoder buffer reclamation on video change or unmount
   useEffect(() => {
     setHasMediaError(false);
+
+    return () => {
+      const video = videoRef.current;
+      if (video) {
+        try {
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+        } catch {
+          // Ignore errors during rapid component teardown
+        }
+      }
+    };
   }, [currentVideo.videoUrl]);
+
+  // Clean up frame sampler canvas memory on unmount
+  useEffect(() => {
+    const sampler = samplerRef.current;
+    return () => {
+      sampler.dispose();
+    };
+  }, []);
 
   // Sync scene when video currentTime changes
   useEffect(() => {
