@@ -2,7 +2,7 @@
 
 > Autonomous engineering, quality assurance, and gradual project improvement system.
 > **Strict Cadence**: Exactly 2 contributions per work session/day.
-> **Current Status**: Session 4 complete (Contributions 7 & 8 finished — 8/20 complete). Waiting for RESUME.
+> **Current Status**: Session 5 complete (Contributions 9 & 10 finished — 10/20 complete, halfway milestone 🎉). Waiting for RESUME.
 
 ---
 
@@ -64,19 +64,19 @@
   - **Commit Hash**: `091242b`
   - **Push Status**: Verified ✅
 
-- [ ] **9. Build & Bundle Optimization**
+- [x] **9. Build & Bundle Optimization**
   - **Category**: Build/bundle optimization
-  - **Brief**: Configure manual Rollup chunk splitting in `vite.config.ts` to separate large vendor libraries and minimize initial page weight.
-  - **Status**: Not started
-  - **Commit Hash**: Pending
-  - **Push Status**: Pending
+  - **Brief**: Configured dynamic Rollup vendor chunk splitting (`vendor-react`, `vendor-icons`), CSS code splitting, esbuild minification, and compressed size reporting in `vite.config.ts`.
+  - **Test Result**: `npm run build` (successful chunks generated), `npm run test:unit` (36/36 passed)
+  - **Commit Hash**: `516f177`
+  - **Push Status**: Verified ✅
 
-- [ ] **10. Caching Improvements**
+- [x] **10. Caching Improvements**
   - **Category**: Caching improvements
-  - **Brief**: Add HTTP `ETag` and explicit `Cache-Control` headers for static and immutable companion assets in Express.
-  - **Status**: Not started
-  - **Commit Hash**: Pending
-  - **Push Status**: Pending
+  - **Brief**: Configured explicit HTTP `Cache-Control` headers (immutable 1-year cache for Vite hashed bundles, no-cache validation for HTML/service worker entry points, 1-hour cache for static manifests) and `ETag` generation in Express `server/index.ts`.
+  - **Test Result**: `npm run test:unit` (41/41 passed across 13 test suites), `npm run typecheck` (0 errors)
+  - **Commit Hash**: `e671469`
+  - **Push Status**: Verified ✅
 
 - [ ] **11. Automated Regression Tests**
   - **Category**: Automated regression tests
@@ -162,3 +162,5 @@
 | Day 3 | 6 | Performance Bottleneck Detection | Performance bottleneck detection | `ab9d1ed` | Pushed ✅ |
 | Day 4 | 7 | Memory Leak Prevention | Memory leak prevention | `6b41ef5` | Pushed ✅ |
 | Day 4 | 8 | Database / Query Optimization | Database/query optimization | `091242b` | Pushed ✅ |
+| Day 5 | 9 | Build & Bundle Optimization | Build/bundle optimization | `516f177` | Pushed ✅ |
+| Day 5 | 10 | Caching Improvements | Caching improvements | `e671469` | Pushed ✅ |
