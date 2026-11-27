@@ -768,12 +768,39 @@ app.delete('/api/activities', (req, res) => {
   res.json({ success: true, message: `Cleared ${deletedCount} activity logs.` });
 });
 
-// Serve static assets from Vite build
+// Caching policy helper for static production assets
+const getStaticAssetCacheControl = (filePath: string): string => {
+  const normalized = filePath.replace(/\\/g, '/');
+  // Immutable 1-year cache for Vite content-hashed bundles and assets
+  if (
+    normalized.includes('/assets/') ||
+    /\.[a-f0-9]{8,}\.(js|css|png|jpg|svg|woff2)$/i.test(normalized)
+  ) {
+    return 'public, max-age=31536000, immutable';
+  }
+  // Fresh validation required for HTML entry points and service workers
+  if (normalized.endsWith('.html') || normalized.endsWith('/sw.js') || normalized.endsWith('sw.js')) {
+    return 'no-cache, must-revalidate';
+  }
+  // 1-hour public cache for standard static manifests and icons
+  return 'public, max-age=3600';
+};
+
+// Serve static assets from Vite build with ETag and Cache-Control headers
 const distPath = path.join(__dirname, '../dist');
-app.use(express.static(distPath));
+app.use(
+  express.static(distPath, {
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      res.setHeader('Cache-Control', getStaticAssetCacheControl(filePath));
+    },
+  })
+);
 
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
+  res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
@@ -794,4 +821,5 @@ export {
   setCachedAiResponse,
   aiResponseCache,
   MAX_CACHE_ENTRIES,
+  getStaticAssetCacheControl,
 };

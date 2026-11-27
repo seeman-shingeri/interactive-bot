@@ -150,6 +150,29 @@ async function runUnitTests() {
   const cachedMemories = db.getRelevantMemories('default_user', 'Sci-Fi Space Exploration', 2);
   assert(cachedMemories.length === relevantMemories.length, 'Memoized query returns consistent result');
 
+  // Test 13: Static Asset Caching Headers and ETag Strategy
+  const { getStaticAssetCacheControl } = await import('../server/index.js');
+  assert(
+    getStaticAssetCacheControl('/dist/assets/vendor-WaWdzvzX.js').includes('immutable'),
+    'Hashed JS asset receives immutable cache control header'
+  );
+  assert(
+    getStaticAssetCacheControl('/dist/assets/index-BM8J28JM.css').includes('immutable'),
+    'Hashed CSS asset receives immutable cache control header'
+  );
+  assert(
+    getStaticAssetCacheControl('/dist/index.html').includes('no-cache'),
+    'HTML entrypoint receives no-cache validation header'
+  );
+  assert(
+    getStaticAssetCacheControl('/dist/sw.js').includes('no-cache'),
+    'Service worker receives no-cache validation header'
+  );
+  assert(
+    getStaticAssetCacheControl('/dist/manifest.json').includes('max-age=3600'),
+    'Standard static asset receives 1-hour cache header'
+  );
+
   console.log('\n🎉 All Companion Unit Tests Passed Successfully!\n');
   process.exit(0);
 }
